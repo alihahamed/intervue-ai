@@ -35,11 +35,15 @@ function AudioRecorder() {
         }
       );
       console.log('res', res)
-      setTranscription(res.data.aiResponse);
-      setAiFeedback(res.data.aiFeedback);
+      setTranscription(res.data.userText);
+      setAiFeedback(res.data.aiResponse);
 
       console.log("transcription", transcription);
       console.log("ai feedback", aiFeedback);
+      // console.log("base64 string", res.data.audio) // a long ass paragraph of strings
+
+      const audio = new Audio("data:audio/wav;base64," + res.data.aiResponse)
+      audio.play()
 
       setUploadStatus("success");
     } catch (error) {
