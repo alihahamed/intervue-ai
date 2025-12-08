@@ -1,6 +1,6 @@
-const fetch = require("node-fetch");
+import fetch from 'node-fetch'
 
-async function getAiResponse(userTranscript) {
+export async function getAiResponse(userTranscript) {
   const systemPrompt = `You are a strict Senior Software Engineer conducting a job interview. 
         The candidate just gave an answer (provided in text). 
         
@@ -20,6 +20,7 @@ async function getAiResponse(userTranscript) {
           { role: "system", content: systemPrompt },
           { role: "user", content: userTranscript },
         ],
+        stream:false
       }),
     });
 
@@ -30,4 +31,3 @@ async function getAiResponse(userTranscript) {
   }
 }
 
-module.exports = {getAiResponse}

@@ -1,10 +1,15 @@
-async function AudioResponse(filePath) {
-  const whisper = require("whisper-node");
+import { nodewhisper } from "nodejs-whisper";
+
+export async function AudioResponse(filePath) {
 
   try {
     console.log("Listening to the audio file..");
 
-    const transcript = await whisper(filePath);
+    const transcript = await nodewhisper(filePath, {
+        modelName:'base'
+    });
+
+    console.log("transcript:", transcript)
 
     const fullText = transcript
       .map((chunk) => chunk.speech)
@@ -20,4 +25,3 @@ async function AudioResponse(filePath) {
   }
 }
 
-module.exports = {AudioResponse}

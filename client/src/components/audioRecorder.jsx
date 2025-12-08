@@ -5,6 +5,9 @@ import { Loader2, Upload } from "lucide-react";
 
 function AudioRecorder() {
   const [uploadStatus, setUploadStatus] = useState("");
+  const [transcription, setTranscription] = useState("");
+  const [aiFeedback, setAiFeedback] = useState("");
+
   const { status, startRecording, stopRecording, mediaBlobUrl } =
     useReactMediaRecorder({
       audio: true,
@@ -24,9 +27,20 @@ function AudioRecorder() {
       formData.append("audio", audioBlob, "voice-audio.wav"); // 'audio' is the name being assigned so that the multer in the backend recoginzes it or else it would be rejected
       // audioBlob is the audio blob being sent and 'voice-audio.wav' is the name of the file thats being sent to prevent confusion
       // it will be renamed to 'audio-123456..' at the backend
-      await axios.post("http://localhost:3021/upload-audio", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      }); 
+      const res = await axios.post(
+        "http://localhost:3021/upload-audio",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      console.log('res', res)
+      setTranscription(res.data.aiResponse);
+      setAiFeedback(res.data.aiFeedback);
+
+      console.log("transcription", transcription);
+      console.log("ai feedback", aiFeedback);
+
       setUploadStatus("success");
     } catch (error) {
       console.error("upload failed:", error);
@@ -83,6 +97,20 @@ function AudioRecorder() {
             )}
             {uploadStatus === "uploading" ? "Sending..." : "Submit Answer"}
           </button>
+        )}
+
+        {uploadStatus === "success" && (
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg w-full">
+            <p className="text-xs font-bold text-gray-500 uppercase">
+              You said:
+            </p>
+            <p className="mb-4 italic">"{transcription}"</p>
+
+            <p className="text-xs font-bold text-blue-500 uppercase">
+              AI Coach:
+            </p>
+            <p className="text-gray-800 whitespace-pre-wrap">{aiFeedback}</p>
+          </div>
         )}
       </div>
     </>
