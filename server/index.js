@@ -3,10 +3,13 @@ import multer from 'multer'
 import cors from 'cors'
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
 import {AudioResponse } from './services/audioService.js'
 import {getAiResponse} from './services/aiService.js'
 import { TextToSpeech } from './services/ttsService.js'
+
 
 const app = express();
 app.use(cors());
@@ -34,8 +37,9 @@ app.post("/upload-audio", upload.single("audio"), async (req, res) => {
   }
 
   const filePath = req.file.path; // the file path of the audio file
-
+  
   try {
+    
     const userText = await AudioResponse(filePath); // extracting the user's text from the audio (Audio -> Text)
     console.log("extracted text from audio", userText);
 
@@ -47,16 +51,24 @@ app.post("/upload-audio", upload.single("audio"), async (req, res) => {
       });
     }
 
+    const __filename = fileURLToPath(import.meta.url)
+    const ___dirname = dirname(__filename)
+    console.log("File name", __filename)
+    console.log("Dir name", ___dirname)
+
+    const tempFileName = `response-${Date.now()}.wav`;
+    const tempFilePath = path.join(___dirname, 'uploads', tempFileName)
+
     const aiResponse = await getAiResponse(userText); // getting the ai response to the user's reply (Text -> AI Response)
     console.log("Ai's response to the user", aiResponse);
 
-    const audioBuffer = await TextToSpeech(aiResponse) // Raw buffer: 01001000 01100101 , Base64: UklGRi4AAABXQVZFZm10IBIA (Json friendly)
-    const audioBase64 = audioBuffer ? audioBuffer.toString('base64') : null; // converting raw buffer to base64 to send it as a json response to the frontend which would play the audio.
+    const audioBuffer = await TextToSpeech(aiResponse, tempFilePath) // Raw buffer: 01001000 01100101 , Base64: UklGRi4AAABXQVZFZm10IBIA (Json friendly)
+    // const audioBase64 = audioBuffer ? audioBuffer.toString('base64') : null; // converting raw buffer to base64 to send it as a json response to the frontend which would play the audio.
 
     return res.json({
       userText: userText,
       aiResponse: aiResponse,
-      audio:audioBase64
+      audio:audioBuffer
     });
 
   } catch (error) {

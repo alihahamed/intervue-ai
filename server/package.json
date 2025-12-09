@@ -12,14 +12,17 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/genai": "^1.32.0",
     "@huggingface/transformers": "^3.8.1",
     "cors": "^2.8.5",
     "download": "^8.0.0",
     "express": "^5.2.1",
     "multer": "^2.0.2",
+    "node-edge-tts": "^1.2.8",
     "node-fetch": "^3.3.2",
     "nodejs-whisper": "^0.2.9",
     "nodemon": "^3.1.11",
+    "wav": "^1.0.2",
     "wavefile": "^11.0.0",
     "whisper-node": "^1.1.1"
   }
