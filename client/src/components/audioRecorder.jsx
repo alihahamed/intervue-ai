@@ -7,6 +7,8 @@ function AudioRecorder() {
   const [uploadStatus, setUploadStatus] = useState("");
   const [transcription, setTranscription] = useState("");
   const [aiFeedback, setAiFeedback] = useState("");
+ 
+  const [selectNiche, setSelectNiche] = useState("hooks");
 
   const { status, startRecording, stopRecording, mediaBlobUrl } =
     useReactMediaRecorder({
@@ -27,6 +29,7 @@ function AudioRecorder() {
       formData.append("audio", audioBlob, "voice-audio.wav"); // 'audio' is the name being assigned so that the multer in the backend recoginzes it or else it would be rejected
       // audioBlob is the audio blob being sent and 'voice-audio.wav' is the name of the file thats being sent to prevent confusion
       // it will be renamed to 'audio-123456..' at the backend
+      formData.append("niche", selectNiche)
       const res = await axios.post(
         "http://localhost:3021/upload-audio",
         formData,
@@ -51,6 +54,20 @@ function AudioRecorder() {
     }
   };
 
+  // const handleNiche = async () => {
+   
+  //   try {
+  //     const response = await axios.post("http://localhost:3021/sys-instructions", sysInstructions,
+  //       {
+  //         headers: { "Content-Type": "application/json" },
+  //       }
+  //     )
+  //     console.log(response)
+  //   } catch (error) {
+  //     console.log(error)
+  //   }
+  // };
+
   return (
     <>
       <div className="flex flex-col items-center gap-4 p-6 border rounded-lg shadow-lg bg-white max-w-sm mx-auto mt-10">
@@ -64,6 +81,27 @@ function AudioRecorder() {
           }`}
         >
           Status:{status}
+        </div>
+
+        <div>
+          <button
+            className="p-2 bg-blue-700 rounded-full hover:bg-blue-600"
+            onClick={() => setSelectNiche("Hooks")}
+          >
+            Hooks{" "}
+          </button>
+          <button
+            className="p-2 bg-green-700 rounded-full hover:bg-green-600"
+            onClick={() => setSelectNiche("SQL")}
+          >
+            SQL queries
+          </button>
+          <button
+            className="p-2 bg-orange-400 rounded-full hover:bg-orange-300"
+            onClick={() => setSelectNiche("Backend")}
+          >
+            Backend
+          </button>
         </div>
 
         <div>

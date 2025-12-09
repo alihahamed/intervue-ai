@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 
-export async function getAiResponse(userTranscript) {
+export async function getAiResponse(userTranscript, sysInstructions) {
   const systemPrompt = `You are a strict Senior Software Engineer conducting a job interview. 
         The candidate just gave an answer (provided in text). 
         
@@ -17,7 +17,7 @@ export async function getAiResponse(userTranscript) {
       body: JSON.stringify({
         model: "llama3.2",
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: sysInstructions },
           { role: "user", content: userTranscript },
         ],
         stream:false
