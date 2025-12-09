@@ -6,9 +6,9 @@ export async function getAiResponse(userTranscript) {
         
         1. Grade their answer from 1-10.
         2. Briefly explain why.
-        3. Ask a challenging follow-up question.
         
-        Keep your response conversational but professional.`;
+        
+        Keep your response short but professional.`;
 
   try {
     const response = await fetch("http://127.0.0.1:11434/api/chat", {

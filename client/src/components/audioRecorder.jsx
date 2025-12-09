@@ -42,7 +42,7 @@ function AudioRecorder() {
       console.log("ai feedback", aiFeedback);
       // console.log("base64 string", res.data.audio) // a long ass paragraph of strings
 
-      const audio = new Audio("ddata:audio/wav;base64," + res.data.audio)
+      const audio = new Audio("data:audio/mp3;base64," + res.data.audio)
       audio.play()
 
       setUploadStatus("success");

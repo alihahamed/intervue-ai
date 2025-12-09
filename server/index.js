@@ -56,19 +56,19 @@ app.post("/upload-audio", upload.single("audio"), async (req, res) => {
     console.log("File name", __filename)
     console.log("Dir name", ___dirname)
 
-    const tempFileName = `response-${Date.now()}.wav`;
+    const tempFileName = `response-${Date.now()}.mp3`;
     const tempFilePath = path.join(___dirname, 'uploads', tempFileName)
 
     const aiResponse = await getAiResponse(userText); // getting the ai response to the user's reply (Text -> AI Response)
     console.log("Ai's response to the user", aiResponse);
 
     const audioBuffer = await TextToSpeech(aiResponse, tempFilePath) // Raw buffer: 01001000 01100101 , Base64: UklGRi4AAABXQVZFZm10IBIA (Json friendly)
-    // const audioBase64 = audioBuffer ? audioBuffer.toString('base64') : null; // converting raw buffer to base64 to send it as a json response to the frontend which would play the audio.
+    const audioBase64 = audioBuffer ? audioBuffer.toString('base64') : null; // converting raw buffer to base64 to send it as a json response to the frontend which would play the audio.
 
     return res.json({
       userText: userText,
       aiResponse: aiResponse,
-      audio:audioBuffer
+      audio: audioBase64
     });
 
   } catch (error) {
