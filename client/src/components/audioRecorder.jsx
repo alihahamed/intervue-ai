@@ -34,7 +34,7 @@ function AudioRecorder() {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-      console.log('res', res)
+      console.log("res", res);
       setTranscription(res.data.userText);
       setAiFeedback(res.data.aiResponse);
 
@@ -42,9 +42,8 @@ function AudioRecorder() {
       console.log("ai feedback", aiFeedback);
       // console.log("base64 string", res.data.audio) // a long ass paragraph of strings
 
-      const audio = new Audio("data:audio/mp3;base64," + res.data.audio)
-      audio.play()
-
+      const audio = new Audio("data:audio/mp3;base64," + res.data.audio);
+      audio.play();
       setUploadStatus("success");
     } catch (error) {
       console.error("upload failed:", error);
