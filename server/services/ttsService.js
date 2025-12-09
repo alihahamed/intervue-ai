@@ -14,7 +14,7 @@ export async function TextToSpeech(text, filePath) {
       OUTPUT_FORMAT.WEBM_24KHZ_16BIT_MONO_OPUS
     );
     
-    const {audioStream} = await tts.toStream(text, {rate: 1, pitch: "-20Hz"})
+    const {audioStream} = await tts.toStream(text)
 
     const audioBuffer = await new Promise((resolve, reject) => {
       const chunks = [];
