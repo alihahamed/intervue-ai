@@ -7,9 +7,9 @@ import { useChat } from "../createContext";
 
 function AudioRecorder() {
   const [uploadStatus, setUploadStatus] = useState("");
-  const [transcription, setTranscription] = useState("");
-  const [aiFeedback, setAiFeedback] = useState("");
-  const [streamResponse, setStreamResponse] = useState([]);
+  // const [transcription, setTranscription] = useState("");
+  // const [aiFeedback, setAiFeedback] = useState("");
+  // const [streamResponse, setStreamResponse] = useState([]);
 
   const {addMessage, setIsProcessing} = useChat() // extracting from the context provider
 
@@ -47,9 +47,8 @@ function AudioRecorder() {
       addMessage('user', res.data.userText) // adding 'user' message to the context
       addMessage('coach', res.data.aiResponse) // adding 'ai' response to the context
 
-      setTranscription(res.data.userText)
-      setAiFeedback(res.data.aiResponse);
-      console.log("feedback", aiFeedback);
+      
+      
 
       
 
@@ -150,21 +149,7 @@ function AudioRecorder() {
           </button>
         )}
 
-        {uploadStatus === "success" && (
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg w-full">
-            <p className="text-xs font-bold text-gray-500 uppercase">
-              You said:
-            </p>
-            <p className="mb-4 italic">"{transcription}"</p>
-
-            <p className="text-xs font-bold text-blue-500 uppercase">
-              AI Coach:
-            </p>
-            <h3 className="text-gray-800 whitespace-pre-wrap text-sm">
-              <TypewriterEffectSmooth words={streamResponse} />
-            </h3>
-          </div>
-        )}
+        
       </div>
     </>
   );

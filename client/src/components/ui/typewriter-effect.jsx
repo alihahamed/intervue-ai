@@ -83,25 +83,27 @@ export const TypewriterEffect = ({
 export const TypewriterEffectSmooth = ({
   words,
   className,
-  cursorClassName
+  cursorClassName,
 }) => {
-  // split text inside of words into array of characters
+  // Split text inside of words into array of characters
   const wordsArray = words.map((word) => {
     return {
       ...word,
       text: word.text.split(""),
     };
   });
+
   const renderWords = () => {
     return (
-      <div>
+      <div className="inline">
         {wordsArray.map((word, idx) => {
           return (
-            <div key={`word-${idx}`} className="inline-block">
+            <div key={`word-${idx}`} className="inline-block mr-1">
               {word.text.map((char, index) => (
                 <span
                   key={`char-${index}`}
-                  className={cn(`dark:text-white text-black `, word.className)}>
+                  className={cn(`dark:text-white text-black`, word.className)}
+                >
                   {char}
                 </span>
               ))}
@@ -113,28 +115,37 @@ export const TypewriterEffectSmooth = ({
   };
 
   return (
-    <div className={cn("flex space-x-1 my-6", className)}>
+    <div className={cn("flex items-center space-x-1", className)}>
       <motion.div
-        className="overflow-hidden pb-2"
+        className="overflow-hidden"
         initial={{
           width: "0%",
         }}
         whileInView={{
-          width: "fit-content",
+          width: "100%", // Changed from fit-content to 100% to allow filling the bubble
         }}
         transition={{
-          duration: 2,
+          duration: 1.5, // Faster duration for chat
           ease: "linear",
-          delay: 1,
-        }}>
+          delay: 0.1,
+        }}
+      >
         <div
-          className="text-xs sm:text-base md:text-xl lg:text:3xl xl:text-5xl font-bold"
+            // CRITICAL FIXES HERE:
+            // 1. Removed text-5xl/bold responsive sizing (reset to text-sm)
+            // 2. Removed whiteSpace: "nowrap" -> changed to pre-wrap
+            // 3. Added break-words
+          className="text-sm font-normal"
           style={{
-            whiteSpace: "nowrap",
-          }}>
-          {renderWords()}{" "}
-        </div>{" "}
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word", 
+          }}
+        >
+          {renderWords()}
+        </div>
       </motion.div>
+      
+      {/* Optional: Cursor (hidden for cleaner chat look, or keep if you want) */}
       <motion.span
         initial={{
           opacity: 0,
@@ -144,14 +155,14 @@ export const TypewriterEffectSmooth = ({
         }}
         transition={{
           duration: 0.8,
-
           repeat: Infinity,
           repeatType: "reverse",
         }}
         className={cn(
-          "block rounded-sm w-[4px]  h-4 sm:h-6 xl:h-12 bg-blue-500",
+          "block rounded-sm w-[2px] h-4 bg-blue-500", // Adjusted height for text-sm
           cursorClassName
-        )}></motion.span>
+        )}
+      ></motion.span>
     </div>
   );
 };

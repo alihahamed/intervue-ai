@@ -1,27 +1,19 @@
 import fetch from 'node-fetch'
+import Groq from 'groq-sdk/index.mjs';
+import 'dotenv/config'
 
 export async function getAiResponse(userTranscript, sysInstructions) {
-  const systemPrompt = `You are a strict Senior Software Engineer conducting a job interview. 
-        The candidate just gave an answer (provided in text). 
-        
-        1. Grade their answer from 1-10.
-        2. Briefly explain why.
-        
-        
-        Keep your response short but professional.`;
+  
+  const groq = new Groq({apiKey:process.env.GROQ_API_KEY})
 
   try {
-    const response = await fetch("http://127.0.0.1:11434/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "llama3.2",
-        messages: [
-          { role: "system", content: sysInstructions },
-          { role: "user", content: userTranscript },
-        ],
-        stream:false
-      }),
+    const completion = await groq.chat.completions.create({
+      messages: [
+        { role: "system", content: sysInstructions},
+        { role: "user", content: userTranscript },
+      ],
+      model: "llama-3.3-70b-versatile", 
+      temperature: 0.5 
     });
 
    return completion.choices[0]?.message?.content || "No response generated.";
