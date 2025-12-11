@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useReactMediaRecorder } from "react-media-recorder";
 import { Loader2, Upload } from "lucide-react";
 import { TypewriterEffectSmooth } from "./ui/typewriter-effect";
-import { useChat } from "../chatContext";
+import { useChat } from "../createContext";
 
 function AudioRecorder() {
   const [uploadStatus, setUploadStatus] = useState("");
@@ -43,20 +43,15 @@ function AudioRecorder() {
         }
       );
       console.log("res", res);
-      
+
       addMessage('user', res.data.userText) // adding 'user' message to the context
-      addMessage('user', res.data.aiResponse) // adding 'ai' response to the context
+      addMessage('coach', res.data.aiResponse) // adding 'ai' response to the context
 
       setTranscription(res.data.userText)
       setAiFeedback(res.data.aiResponse);
       console.log("feedback", aiFeedback);
 
-      const splitResponse = aiFeedback.split(" "); // streaming the response work that "type writier effect" to work
-      console.log(splitResponse);
-
-      const stream = splitResponse.map((word) => ({ text: word + "\u00A0", className: "text-blue-500 text-sm" }));
-      setStreamResponse(stream);
-      console.log(streamResponse);
+      
 
       // console.log("base64 string", res.data.audio) // a long ass paragraph of strings
 

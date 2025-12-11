@@ -1,9 +1,10 @@
 import fetch from 'node-fetch'
 import Groq from 'groq-sdk/index.mjs';
+import { configDotenv } from 'dotenv';
 
 export async function getAiResponse(userTranscript, sysInstructions) {
   
-  const groq = new Groq({apiKey:"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"})
+  const groq = new Groq({apiKey:process.env.GROQ_API_KEY})
 
   try {
     const completion = await groq.chat.completions.create({

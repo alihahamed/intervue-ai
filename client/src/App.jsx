@@ -1,12 +1,14 @@
 import AudioRecorder from "./components/audioRecorder";
 import { ChatProvider } from "./chatContext";
 import "./App.css";
+import ChatConversation from "./components/chat";
 
 function App() {
   return (
     <>
       <ChatProvider>
         <AudioRecorder />
+        <ChatConversation />
       </ChatProvider>
     </>
   );

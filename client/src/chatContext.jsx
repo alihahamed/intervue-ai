@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from "react"
 import { Children } from "react"
+import { ChatContext } from "./createContext"
 
-const ChatContext = createContext()
 
 export const ChatProvider = ({children}) => {
     const [message, setMessage] = useState([])
@@ -16,12 +16,9 @@ export const ChatProvider = ({children}) => {
     }
 
     return (
-        <ChatContext.Provider value={{message, isProcessing,setIsProcessing, addMessage}}>
+        <ChatContext.Provider value={{message, isProcessing, setIsProcessing, addMessage}}>
             {children}
         </ChatContext.Provider>
     )
 }
 
-export const useChat = () => {
-    useContext(ChatContext)
-}
