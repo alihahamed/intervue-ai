@@ -2,13 +2,15 @@ import axios from "axios";
 import React, { useState } from "react";
 import { useReactMediaRecorder } from "react-media-recorder";
 import { Loader2, Upload } from "lucide-react";
+import { TypewriterEffectSmooth } from "./ui/typewriter-effect";
 
 function AudioRecorder() {
   const [uploadStatus, setUploadStatus] = useState("");
   const [transcription, setTranscription] = useState("");
   const [aiFeedback, setAiFeedback] = useState("");
- 
-  const [selectNiche, setSelectNiche] = useState("hooks");
+  const [streamResponse, setStreamResponse] = useState([]);
+
+  const [selectNiche, setSelectNiche] = useState("Hooks");
 
   const { status, startRecording, stopRecording, mediaBlobUrl } =
     useReactMediaRecorder({
@@ -29,7 +31,7 @@ function AudioRecorder() {
       formData.append("audio", audioBlob, "voice-audio.wav"); // 'audio' is the name being assigned so that the multer in the backend recoginzes it or else it would be rejected
       // audioBlob is the audio blob being sent and 'voice-audio.wav' is the name of the file thats being sent to prevent confusion
       // it will be renamed to 'audio-123456..' at the backend
-      formData.append("niche", selectNiche)
+      formData.append("niche", selectNiche);
       const res = await axios.post(
         "http://localhost:3021/upload-audio",
         formData,
@@ -40,9 +42,15 @@ function AudioRecorder() {
       console.log("res", res);
       setTranscription(res.data.userText);
       setAiFeedback(res.data.aiResponse);
+      console.log("feedback", aiFeedback);
 
-      console.log("transcription", transcription);
-      console.log("ai feedback", aiFeedback);
+      const splitResponse = aiFeedback.split(" "); // streaming the response work that "type writier effect" to work
+      console.log(splitResponse);
+
+      const stream = splitResponse.map((word) => ({ text: word + "\u00A0", className: "text-blue-500 text-sm" }));
+      setStreamResponse(stream);
+      console.log(streamResponse);
+
       // console.log("base64 string", res.data.audio) // a long ass paragraph of strings
 
       const audio = new Audio("data:audio/mp3;base64," + res.data.audio);
@@ -55,7 +63,7 @@ function AudioRecorder() {
   };
 
   // const handleNiche = async () => {
-   
+
   //   try {
   //     const response = await axios.post("http://localhost:3021/sys-instructions", sysInstructions,
   //       {
@@ -150,7 +158,9 @@ function AudioRecorder() {
             <p className="text-xs font-bold text-blue-500 uppercase">
               AI Coach:
             </p>
-            <p className="text-gray-800 whitespace-pre-wrap">{aiFeedback}</p>
+            <h3 className="text-gray-800 whitespace-pre-wrap text-sm">
+              <TypewriterEffectSmooth words={streamResponse} />
+            </h3>
           </div>
         )}
       </div>

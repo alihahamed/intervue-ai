@@ -12,7 +12,7 @@ export async function getAiResponse(userTranscript, sysInstructions) {
         { role: "user", content: userTranscript },
       ],
       model: "llama-3.3-70b-versatile", 
-      temperature: 0.5, 
+      temperature: 0.5 
     });
 
    return completion.choices[0]?.message?.content || "No response generated.";
