@@ -3,12 +3,15 @@ import React, { useState } from "react";
 import { useReactMediaRecorder } from "react-media-recorder";
 import { Loader2, Upload } from "lucide-react";
 import { TypewriterEffectSmooth } from "./ui/typewriter-effect";
+import { useChat } from "../chatContext";
 
 function AudioRecorder() {
   const [uploadStatus, setUploadStatus] = useState("");
   const [transcription, setTranscription] = useState("");
   const [aiFeedback, setAiFeedback] = useState("");
   const [streamResponse, setStreamResponse] = useState([]);
+
+  const {addMessage, setIsProcessing} = useChat() // extracting from the context provider
 
   const [selectNiche, setSelectNiche] = useState("Hooks");
 
@@ -40,7 +43,11 @@ function AudioRecorder() {
         }
       );
       console.log("res", res);
-      setTranscription(res.data.userText);
+      
+      addMessage('user', res.data.userText) // adding 'user' message to the context
+      addMessage('user', res.data.aiResponse) // adding 'ai' response to the context
+
+      setTranscription(res.data.userText)
       setAiFeedback(res.data.aiResponse);
       console.log("feedback", aiFeedback);
 

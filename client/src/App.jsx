@@ -1,14 +1,15 @@
-import AudioRecorder from './components/audioRecorder'
-import './App.css'
+import AudioRecorder from "./components/audioRecorder";
+import { ChatProvider } from "./chatContext";
+import "./App.css";
 
 function App() {
-  
-
   return (
-    <>  
-      <AudioRecorder />
+    <>
+      <ChatProvider>
+        <AudioRecorder />
+      </ChatProvider>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
