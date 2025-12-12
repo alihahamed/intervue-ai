@@ -70,7 +70,7 @@ app.post("/upload-audio", upload.single("audio"), async (req, res) => {
   }
 
   const filePath = req.file.path; // the file path of the audio file
-
+  
   const selectedNiche = req.body.niche; // returns the selected niche from the frontend
   console.log("Selected niche:", selectedNiche);
 
@@ -101,6 +101,8 @@ app.post("/upload-audio", upload.single("audio"), async (req, res) => {
 
     const audioBuffer = await TextToSpeech(aiResponse); // Raw buffer: 01001000 01100101 , Base64: UklGRi4AAABXQVZFZm10IBIA (Json friendly)
     const audioBase64 = audioBuffer ? audioBuffer.toString("base64") : null; // converting raw buffer to base64 to send it as a json response to the frontend which would play the audio.
+
+    fs.unlinkSync(filePath)
 
     return res.json({
       userText: userText,

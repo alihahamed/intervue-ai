@@ -33,7 +33,7 @@ function ChatConversation() {
                 />
               ) : (
                 message.map((msg, index) => {
-                  const textContent = msg.text || "";
+                  const textContent = msg.text ? msg.text : "Couldn't hear you. "
                   const role = msg.sender === "user" ? "user" : "assistant";
                   const isUser = role === "user";
 

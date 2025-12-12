@@ -15,10 +15,11 @@ function ChatInput() {
 
   const [inputText, setInputText] = useState("");
   const { addMessage, setSelectNiche, selectNiche } = useChat();
-  const [voiceState, setVoiceState] = useState("")
+  const [isUploading, setIsUploading] = useState(false)
 
   const handleAudioUpload = async (blobUrl) => {
     try {
+      setIsUploading(true)
       const response = await fetch(mediaBlobUrl); // the mediaBlobUrl is internally updated whenever an audio is recorded. commenting here to prevent confusion
       const audioBlob = await response.blob();
 
@@ -44,8 +45,9 @@ function ChatInput() {
       audio.play();
       
     } catch (error) {
-      console.error("upload failed:", error);
-      
+      console.error("upload failed:", error); 
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -56,11 +58,13 @@ const { status, startRecording, stopRecording, mediaBlobUrl } =
       onStop:(blobUrl) => handleAudioUpload(blobUrl) 
     });
 
+const voiceStatus = isUploading ? "processing" : status === "recording" ? "recording" : "idle"
+
 const handleVoiceSubmit = () => {
     if(status === 'recording') {
         
         stopRecording()
-        setVoiceState("processing")
+        
     } else {
         startRecording()
     }
@@ -94,7 +98,7 @@ const handleVoiceSubmit = () => {
         placeholders={placeholders}
         onSubmit={handleTextSubmit}
         onChange={(e) => setInputText(e.target.value)}
-        voiceState={status === "recording" ? "recording" : "idle"}
+        voiceState={voiceStatus}
         onVoiceClick={handleVoiceSubmit}
       />
     </div>
