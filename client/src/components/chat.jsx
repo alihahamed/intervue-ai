@@ -8,18 +8,17 @@ import { useChat } from "../createContext";
 
 import { Orb } from "./ui/Orb";
 import { Message, MessageContent } from "./ui/message";
-import { Card } from './ui/card';
-import {TextGenerateEffect} from './ui/text-generate-effect'
+import { Card } from "./ui/card";
+import { TextGenerateEffect } from "./ui/text-generate-effect";
+import { BackgroundLines } from "./ui/background-lines";
 import ChatInput from "./chatInput";
-
 
 function ChatConversation() {
   const { message } = useChat();
-  console.log(message)
-
-  
+  console.log(message);
 
   return (
+    <>
     <div className="flex items-center justify-center w-full p-4">
       <Card className="w-full max-w-3xl mx-auto h-[550px] bg-[#09090b] border border-[#27272a] shadow-xl rounded-xl overflow-hidden">
         <div className="flex h-full flex-col">
@@ -33,7 +32,9 @@ function ChatConversation() {
                 />
               ) : (
                 message.map((msg, index) => {
-                  const textContent = msg.text ? msg.text : "Couldn't hear you. "
+                  const textContent = msg.text
+                    ? msg.text
+                    : "Couldn't hear you. ";
                   const role = msg.sender === "user" ? "user" : "assistant";
                   const isUser = role === "user";
 
@@ -48,13 +49,11 @@ function ChatConversation() {
                     <Message
                       key={index}
                       from={role}
-                      // ALIGNMENT: 
+                      // ALIGNMENT:
                       // User: justify-end
                       // Assistant: justify-end + flex-row-reverse (so Avatar is on Left visually)
                       className={`flex w-full gap-3 items-start py-2 ${
-                        isUser 
-                          ? "justify-end" 
-                          : "justify-end flex-row-reverse"
+                        isUser ? "justify-end" : "justify-end flex-row-reverse"
                       }`}
                     >
                       {/* BUBBLE CONTENT */}
@@ -64,13 +63,18 @@ function ChatConversation() {
                         className={`
                           relative flex flex-col gap-2 rounded-2xl px-4 py-3 text-sm shadow-sm
                           w-fit max-w-[70%] overflow-hidden whitespace-pre-wrap break-words
-                          ${isUser 
-                              ? "bg-white text-black rounded-br-none" 
+                          ${
+                            isUser
+                              ? "bg-white text-black rounded-br-none"
                               : "bg-[#27272a] text-white rounded-tl-none"
                           }
                         `}
                       >
-                        {role === 'assistant' ? <TextGenerateEffect words={textContent} /> : textContent}
+                        {role === "assistant" ? (
+                          <TextGenerateEffect words={textContent} />
+                        ) : (
+                          textContent
+                        )}
                       </MessageContent>
 
                       {/* ASSISTANT AVATAR (ORB) */}
@@ -87,12 +91,11 @@ function ChatConversation() {
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
-            <ChatInput/>
-
+          <ChatInput />
         </div>
-        
       </Card>
     </div>
+    </>
   );
 }
 
