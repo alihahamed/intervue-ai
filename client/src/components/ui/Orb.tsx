@@ -24,7 +24,7 @@ type OrbProps = {
 }
 
 export function Orb({
-  colors = ["#CADCFC", "#A0B9D1"],
+  colors = ["#F6E7D8", "#E0CFC2"],
   colorsRef,
   resizeDebounce = 100,
   seed,
@@ -144,22 +144,7 @@ function Scene({
     targetColor2Ref.current = new THREE.Color(colors[1])
   }, [colors])
 
-  useEffect(() => {
-    const apply = () => {
-      if (!circleRef.current) return
-      const isDark = document.documentElement.classList.contains("dark")
-      circleRef.current.material.uniforms.uInverted.value = isDark ? 1 : 0
-    }
-
-    apply()
-
-    const observer = new MutationObserver(apply)
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    })
-    return () => observer.disconnect()
-  }, [])
+  // Removed MutationObserver logic here to keep background permanently black
 
   useFrame((_, delta: number) => {
     const mat = circleRef.current?.material
@@ -233,9 +218,7 @@ function Scene({
   const uniforms = useMemo(() => {
     perlinNoiseTexture.wrapS = THREE.RepeatWrapping
     perlinNoiseTexture.wrapT = THREE.RepeatWrapping
-    const isDark =
-      typeof document !== "undefined" &&
-      document.documentElement.classList.contains("dark")
+    
     return {
       uColor1: new THREE.Uniform(new THREE.Color(initialColorsRef.current[0])),
       uColor2: new THREE.Uniform(new THREE.Color(initialColorsRef.current[1])),
@@ -243,7 +226,7 @@ function Scene({
       uPerlinTexture: new THREE.Uniform(perlinNoiseTexture),
       uTime: new THREE.Uniform(0),
       uAnimation: new THREE.Uniform(0.1),
-      uInverted: new THREE.Uniform(isDark ? 1 : 0),
+      uInverted: new THREE.Uniform(1), // Forced to 1 for Black Background
       uInputVolume: new THREE.Uniform(0),
       uOutputVolume: new THREE.Uniform(0),
       uOpacity: new THREE.Uniform(0),
@@ -279,6 +262,7 @@ function clamp01(n: number) {
   if (!Number.isFinite(n)) return 0
   return Math.min(1, Math.max(0, n))
 }
+
 const vertexShader = /* glsl */ `
 uniform float uTime;
 uniform sampler2D uPerlinTexture;

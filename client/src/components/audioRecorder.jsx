@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useState } from "react";
 import { useReactMediaRecorder } from "react-media-recorder";
 import { Loader2, Upload } from "lucide-react";
-import { TypewriterEffectSmooth } from "./ui/typewriter-effect";
+
 import { useChat } from "../createContext";
 
 function AudioRecorder() {
@@ -11,9 +11,8 @@ function AudioRecorder() {
   // const [aiFeedback, setAiFeedback] = useState("");
   // const [streamResponse, setStreamResponse] = useState([]);
 
-  const {addMessage, setIsProcessing} = useChat() // extracting from the context provider
-
-  const [selectNiche, setSelectNiche] = useState("Hooks");
+  const {addMessage, setIsProcessing, selectNiche, setSelectNiche} = useChat() // extracting from the context provider
+  // const [selectNiche, setSelectNiche] = useState("Hooks");
 
   const { status, startRecording, stopRecording, mediaBlobUrl } =
     useReactMediaRecorder({
@@ -45,7 +44,7 @@ function AudioRecorder() {
       console.log("res", res);
 
       addMessage('user', res.data.userText) // adding 'user' message to the context
-      addMessage('coach', res.data.aiResponse) // adding 'ai' response to the context
+      addMessage('assistant', res.data.aiResponse) // adding 'ai' response to the context
 
       
       

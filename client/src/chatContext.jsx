@@ -6,8 +6,9 @@ import { ChatContext } from "./createContext"
 export const ChatProvider = ({children}) => {
     const [message, setMessage] = useState([])
     const [isProcessing, setIsProcessing] = useState("")
+    const [selectNiche, setSelectNiche] = useState("Hooks")
 
-    const addMessage = (sender, text, audioBase64 = null) => {
+    const addMessage = (sender, text, audioBase64 = null ) => {
         setMessage((prev) => [...prev, {
             sender,
             text, 
@@ -16,7 +17,7 @@ export const ChatProvider = ({children}) => {
     }
 
     return (
-        <ChatContext.Provider value={{message, isProcessing, setIsProcessing, addMessage}}>
+        <ChatContext.Provider value={{message, isProcessing, setIsProcessing, addMessage, selectNiche, setSelectNiche}}>
             {children}
         </ChatContext.Provider>
     )
