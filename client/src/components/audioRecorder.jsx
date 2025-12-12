@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useState } from "react";
-import { useReactMediaRecorder } from "react-media-recorder";
+
 import { Loader2, Upload } from "lucide-react";
 
 import { useChat } from "../createContext";
@@ -14,11 +14,7 @@ function AudioRecorder() {
   const {addMessage, setIsProcessing, selectNiche, setSelectNiche} = useChat() // extracting from the context provider
   // const [selectNiche, setSelectNiche] = useState("Hooks");
 
-  const { status, startRecording, stopRecording, mediaBlobUrl } =
-    useReactMediaRecorder({
-      audio: true,
-      blobPropertyBag: { type: "audio/wav" }, // forcing the audio type to be a wav file
-    });
+  
 
   const handleUpload = async () => {
     if (!mediaBlobUrl) return;

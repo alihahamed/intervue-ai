@@ -10,6 +10,7 @@ import { Orb } from "./ui/Orb";
 import { Message, MessageContent } from "./ui/message";
 import { Card } from './ui/card';
 import {TextGenerateEffect} from './ui/text-generate-effect'
+import ChatInput from "./chatInput";
 
 
 function ChatConversation() {
@@ -20,7 +21,7 @@ function ChatConversation() {
 
   return (
     <div className="flex items-center justify-center w-full p-4">
-      <Card className="w-full max-w-2xl mx-auto h-[500px] bg-[#09090b] border border-[#27272a] shadow-xl rounded-xl overflow-hidden">
+      <Card className="w-full max-w-3xl mx-auto h-[550px] bg-[#09090b] border border-[#27272a] shadow-xl rounded-xl overflow-hidden">
         <div className="flex h-full flex-col">
           <Conversation className="h-full overflow-hidden">
             <ConversationContent className="p-4 space-y-4">
@@ -86,7 +87,10 @@ function ChatConversation() {
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
+            <ChatInput/>
+
         </div>
+        
       </Card>
     </div>
   );

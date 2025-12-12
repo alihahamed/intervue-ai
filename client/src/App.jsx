@@ -10,8 +10,8 @@ function App() {
     <>
       <ChatProvider>
         
-        <AudioRecorder />
-        <ChatInput />
+        {/* <AudioRecorder /> */}
+        
         <ChatConversation />
       </ChatProvider>
     </>
