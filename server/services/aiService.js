@@ -2,18 +2,27 @@ import fetch from 'node-fetch'
 import Groq from 'groq-sdk/index.mjs';
 import 'dotenv/config'
 
-export async function getAiResponse(userTranscript, sysInstructions) {
+export async function getAiResponse(userTranscript, sysInstructions, history = []) {
   
   const groq = new Groq({apiKey:process.env.GROQ_API_KEY})
 
+  //  map the array to ensure every item has ONLY 'role' and 'content'
+  const formattedHistory = history.map(msg => ({
+    role: msg.role || (msg.sender === "user" ? "user" : "assistant"), // Handle both 'sender' and 'role' keys
+    content: msg.content || msg.text || "" // Handle both 'text' and 'content' keys
+  }));
+
+  // Add the system instructions (rules)
+  const allMessages = [{role:"system", content:sysInstructions}, ...formattedHistory,{ role: "user", content: userTranscript } ]
+  
+  
+  
+
   try {
     const completion = await groq.chat.completions.create({
-      messages: [
-        { role: "system", content: sysInstructions},
-        { role: "user", content: userTranscript },
-      ],
+      messages: allMessages,
       model: "llama-3.3-70b-versatile", 
-      temperature: 0.5 
+      temperature: 0.6 
     });
 
    return completion.choices[0]?.message?.content || "No response generated.";

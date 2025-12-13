@@ -42,6 +42,7 @@ const SYSTEM_PROMPT = {
        - Grade the answer (1-10) based on technical depth.
        - Provide brief, constructive feedback explaining the gap.
        - Ask a relevant follow-up question.
+    4.Before responding, silently analyze the user's answer. Check for specific keywords (e.g., 'dependency array', 'cleanup') related to the topic. If they miss them, lower the grade. Do not output this internal thought process, only the final response.
 
     === EXAMPLES OF EXPECTED BEHAVIOR ===
 
@@ -78,6 +79,8 @@ const SYSTEM_PROMPT = {
        - Grade (1-10). Fail them for inefficient queries or ignoring data integrity.
        - Explain the 'Why' (Execution plans, Locking, Normalization).
        - Ask a logical follow-up.
+    4.Before responding, silently analyze the user's answer. Check for specific keywords (e.g., 'dependency array', 'cleanup') related to the topic. If they miss them, lower the grade. Do not output this internal thought process, only the final response.
+
 
     === EXAMPLES OF EXPECTED BEHAVIOR ===
 
@@ -113,6 +116,7 @@ const SYSTEM_PROMPT = {
        - Grade (1-10). Be strict on Event Loop vs Threading concepts.
        - Explain the grade.
        - Ask a follow-up.
+    4.Before responding, silently analyze the user's answer. Check for specific keywords (e.g., 'dependency array', 'cleanup') related to the topic. If they miss them, lower the grade. Do not output this internal thought process, only the final response.
 
     === EXAMPLES OF EXPECTED BEHAVIOR ===
 
@@ -148,6 +152,15 @@ app.post("/upload-audio", upload.single("audio"), async (req, res) => {
 
   const selectedNiche = req.body.niche; // returns the selected niche from the frontend
   console.log("Selected niche:", selectedNiche);
+  
+  let history = []
+
+  try {
+    history = JSON.parse(req.body.history || [])
+  } catch (error) {
+    console.log("Error converting string to array", error)
+    history = []
+  }
 
   const systemInstructions = SYSTEM_PROMPT[selectedNiche];
 
@@ -170,7 +183,7 @@ app.post("/upload-audio", upload.single("audio"), async (req, res) => {
     const tempFileName = `response-${Date.now()}.mp3`;
     const tempFilePath = path.join(___dirname, "uploads", tempFileName);
 
-    const aiResponse = await getAiResponse(userText, systemInstructions); // getting the ai response to the user's reply (Text -> AI Response)
+    const aiResponse = await getAiResponse(userText, systemInstructions, history); // getting the ai response to the user's reply (Text -> AI Response)
     console.log("Ai's response to the user", aiResponse);
 
     const audioBuffer = await TextToSpeech(aiResponse); // Raw buffer: 01001000 01100101 , Base64: UklGRi4AAABXQVZFZm10IBIA (Json friendly)
@@ -192,11 +205,13 @@ app.post("/upload-audio", upload.single("audio"), async (req, res) => {
 app.post("/upload-text", async (req, res) => {
   const userText = req.body.text;
   const selectedNiche = req.body.niche;
+  const history = req.body.history
+  console.log(history)
 
   const systemInstructions = SYSTEM_PROMPT[selectedNiche];
 
   try {
-    const aiResponse = await getAiResponse(userText, systemInstructions);
+    const aiResponse = await getAiResponse(userText, systemInstructions, history);
     console.log("Text endpoint ai response to the user:", aiResponse);
 
     const audioBuffer = await TextToSpeech(aiResponse);
