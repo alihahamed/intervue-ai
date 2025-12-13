@@ -22,13 +22,19 @@ export async function getAiResponse(userTranscript, sysInstructions, history = [
     const completion = await groq.chat.completions.create({
       messages: allMessages,
       model: "llama-3.3-70b-versatile", 
-      temperature: 0.6 
+      temperature: 0.6,
+      response_format : {type:"json_object"}
     });
 
    return completion.choices[0]?.message?.content || "No response generated.";
    
   } catch (error) {
     console.log("Error while fetching the ai response", error)
+    return JSON.stringify({
+      grade:0,
+      feedback:"NO response generated.",
+      nextQuestion:""
+    })
   }
 }
 

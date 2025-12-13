@@ -9,6 +9,7 @@ import { dirname } from "path";
 import { AudioResponse } from "./services/audioService.js";
 import { getAiResponse } from "./services/aiService.js";
 import { TextToSpeech } from "./services/ttsService.js";
+import { json } from "stream/consumers";
 
 const app = express();
 app.use(cors());
@@ -43,6 +44,15 @@ const SYSTEM_PROMPT = {
        - Provide brief, constructive feedback explaining the gap.
        - Ask a relevant follow-up question.
     4.Before responding, silently analyze the user's answer. Check for specific keywords (e.g., 'dependency array', 'cleanup') related to the topic. If they miss them, lower the grade. Do not output this internal thought process, only the final response.
+
+    IMPORTANT: You must output your response in strict JSON format.
+
+    Response Schema:
+    {
+      "grade": number, // 1-10
+      "feedback": "string", // Explanation of the grade
+      "nextQuestion": "string" // The follow-up question
+    }
 
     === EXAMPLES OF EXPECTED BEHAVIOR ===
 
@@ -81,6 +91,14 @@ const SYSTEM_PROMPT = {
        - Ask a logical follow-up.
     4.Before responding, silently analyze the user's answer. Check for specific keywords (e.g., 'dependency array', 'cleanup') related to the topic. If they miss them, lower the grade. Do not output this internal thought process, only the final response.
 
+    IMPORTANT: You must output your response in strict JSON format.
+
+    Response Schema:
+    {
+      "grade": number, // 1-10
+      "feedback": "string", // Explanation of the grade
+      "nextQuestion": "string" // The follow-up question
+    }
 
     === EXAMPLES OF EXPECTED BEHAVIOR ===
 
@@ -117,6 +135,15 @@ const SYSTEM_PROMPT = {
        - Explain the grade.
        - Ask a follow-up.
     4.Before responding, silently analyze the user's answer. Check for specific keywords (e.g., 'dependency array', 'cleanup') related to the topic. If they miss them, lower the grade. Do not output this internal thought process, only the final response.
+
+    IMPORTANT: You must output your response in strict JSON format.
+
+    Response Schema:
+    {
+      "grade": number, // 1-10
+      "feedback": "string", // Explanation of the grade
+      "nextQuestion": "string" // The follow-up question
+    }
 
     === EXAMPLES OF EXPECTED BEHAVIOR ===
 
@@ -186,14 +213,27 @@ app.post("/upload-audio", upload.single("audio"), async (req, res) => {
     const aiResponse = await getAiResponse(userText, systemInstructions, history); // getting the ai response to the user's reply (Text -> AI Response)
     console.log("Ai's response to the user", aiResponse);
 
-    const audioBuffer = await TextToSpeech(aiResponse); // Raw buffer: 01001000 01100101 , Base64: UklGRi4AAABXQVZFZm10IBIA (Json friendly)
+    let aiData
+
+    try {
+      aiData = JSON.parse(aiResponse)
+      console.log("ai data:", aiData)
+    } catch (error) {
+        console.log("error parsing json to object")
+        aiData = {grade:0, feedback:"Couldnt completed the request", nextQuestion:""}
+    }
+
+    const cleanText = `${aiData.greeting ? aiData.greeting : ""} ${aiData.feedback} ${aiData.nextQuestion}`
+    console.log("clean text",cleanText)
+
+    const audioBuffer = await TextToSpeech(cleanText); // Raw buffer: 01001000 01100101 , Base64: UklGRi4AAABXQVZFZm10IBIA (Json friendly)
     const audioBase64 = audioBuffer ? audioBuffer.toString("base64") : null; // converting raw buffer to base64 to send it as a json response to the frontend which would play the audio.
 
     fs.unlinkSync(filePath);
 
     return res.json({
       userText: userText,
-      aiResponse: aiResponse,
+      aiResponse: aiData,
       audio: audioBase64,
     });
   } catch (error) {
@@ -214,12 +254,25 @@ app.post("/upload-text", async (req, res) => {
     const aiResponse = await getAiResponse(userText, systemInstructions, history);
     console.log("Text endpoint ai response to the user:", aiResponse);
 
-    const audioBuffer = await TextToSpeech(aiResponse);
+    let aiData
+
+    try {
+      aiData = JSON.parse(aiResponse)
+      console.log("ai data:", aiData)
+    } catch (error) {
+        console.log("error parsing json to object")
+        aiData = {grade:0, feedback:"Couldnt completed the request", nextQuestion:""}
+    } 
+
+    const cleanText = `${aiData.greeting ? aiData.greeting : "" } ${aiData.feedback} ${aiData.nextQuestion}`
+    console.log("clean text",cleanText)
+
+    const audioBuffer = await TextToSpeech(cleanText);
     const audioBase64 = audioBuffer ? audioBuffer.toString("base64") : null;
 
     return res.json({
       userText: userText,
-      aiResponse: aiResponse,
+      aiResponse: aiData,
       audio: audioBase64,
     });
   } catch (error) {
