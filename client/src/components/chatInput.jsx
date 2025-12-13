@@ -28,6 +28,12 @@ function ChatInput() {
       content:msg.text
     }))
 
+    console.log("Audio Size:", audioBlob.size); 
+    if (audioBlob.size < 1000) {
+        console.error("Audio file is too small/empty!");
+        return;
+    }
+
       const formData = new FormData();
       formData.append("audio", audioBlob, "voice-audio.wav"); // 'audio' is the name being assigned so that the multer in the backend recoginzes it or else it would be rejected
       // audioBlob is the audio blob being sent and 'voice-audio.wav' is the name of the file thats being sent to prevent confusion
@@ -60,7 +66,7 @@ function ChatInput() {
 const { status, startRecording, stopRecording, mediaBlobUrl } =
     useReactMediaRecorder({
       audio: true,
-      blobPropertyBag: { type: "audio/wav" }, // forcing the audio type to be a wav file
+      // blobPropertyBag: { type: "audio/wav" }, // forcing the audio type to be a wav file
       onStop:(blobUrl) => handleAudioUpload(blobUrl) 
     });
 
@@ -68,7 +74,6 @@ const voiceStatus = isUploading ? "processing" : status === "recording" ? "recor
 
 const handleVoiceSubmit = () => {
     if(status === 'recording') {
-        
         stopRecording()
         
     } else {
@@ -114,6 +119,7 @@ const handleVoiceSubmit = () => {
         onChange={(e) => setInputText(e.target.value)}
         voiceState={voiceStatus}
         onVoiceClick={handleVoiceSubmit}
+        
       />
     </div>
   );

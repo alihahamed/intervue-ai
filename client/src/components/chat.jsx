@@ -13,94 +13,117 @@ import { TextGenerateEffect } from "./ui/text-generate-effect";
 import { BackgroundLines } from "./ui/background-lines";
 import ChatInput from "./chatInput";
 import { WavyBackground } from "./ui/wavy-background";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { GlowingEffect } from "./ui/glowing-effect";
+
+// 1. Updated Badge Styling (Absolute Position)
+const GradeBadge = ({ grade }) => {
+  if (grade === null || grade === undefined) return null;
+
+  // Solid colors for the "Notification" pop effect
+  let styles = "bg-red-500 border-red-600 text-white shadow-red-500/30";
+  if (grade >= 8) {
+    styles = "bg-green-500 border-green-600 text-black shadow-green-500/30";
+  } else if (grade >= 5) {
+    styles = "bg-amber-500 border-amber-600 text-white shadow-amber-500/30";
+  }
+
+  return (
+    <Badge
+      className={cn(
+        // Absolute positioning: Moves it to Top-Right corner, slightly outside
+        "absolute -top-3 -right-2 z-20 pointer-events-none shadow-md",
+        "px-2 py-0.5 text-[10px] h-5 min-w-fit justify-center rounded-full border",
+        styles
+      )}
+    >
+      Grade: {grade}
+    </Badge>
+  );
+};
 
 function ChatConversation() {
   const { message } = useChat();
-  console.log(message);
 
   return (
-    <>
-    
-      <div className="flex items-center justify-center w-full p-4">
+    // 1. WavyBackground is the ROOT container.
+    // It handles the black background automatically via its internal styles.
+    <WavyBackground className="w-full max-w-4xl mx-auto pb-40">
+      {/* 2. Your Card sits INSIDE it */}
+      <GlowingEffect
+        spread={40}
+        glow={true}
+        disabled={false}
+        proximity={20}
+        inactiveZone={0.01}
+      />
+      <Card className="w-full max-w-3xl mx-auto h-[550px] md:h-[600px] bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm">
         
-        <Card className="w-full max-w-3xl mx-auto h-[550px] bg-[#09090b] border border-[#27272a] shadow-xl rounded-xl overflow-hidden">
-          <div className="flex h-full flex-col">
-            <Conversation className="h-full overflow-hidden">
-              <ConversationContent className="p-4 space-y-4">
-                {message.length === 0 ? (
-                  <ConversationEmptyState
-                    icon={<Orb className="size-12" agentState={"listening"} />}
-                    title="No messages yet"
-                    description="Start a conversation to see messages here"
-                  />
-                ) : (
-                  message.map((msg, index) => {
-                    const textContent = msg.sender === "assistant" ? ` ${msg.text.feedback} ${msg.text.nextQuestion}` : msg.text
-                      
-                    const role = msg.sender === "user" ? "user" : "assistant";
-                    const isUser = role === "user";
+        <div className="flex h-full flex-col">
+          
+          <Conversation className="h-full overflow-hidden">
+            <ConversationContent className="p-4 space-y-4">
+              {message.length === 0 ? (
+                <ConversationEmptyState
+                  icon={<Orb className="size-12" agentState="listening" />}
+                  title="No messages yet"
+                  description="Start a conversation to see messages here"
+                />
+              ) : (
+                message.map((msg, index) => {
+                  const isUser = msg.sender === "user";
+                  const textContent = isUser
+                    ? msg.text
+                    : `${msg.text.feedback || ""} ${
+                        msg.text.nextQuestion || ""
+                      }`;
+                  const grade = !isUser ? msg.text.grade : undefined;
 
-                    
-                    
+                  return (
+                    <Message
+                      key={msg.id || index}
+                      from={isUser ? "user" : "assistant"}
+                      className={`flex w-full gap-3 items-start py-2 ${
+                        isUser ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {!isUser && (
+                        <div className="ring-border size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
+                          <Orb className="h-full w-full" agentState="talking" />
+                        </div>
+                      )}
 
-                    return (
-                      <Message
-                        key={index}
-                        from={role}
-                        // ALIGNMENT:
-                        // User: justify-end
-                        // Assistant: justify-end + flex-row-reverse (so Avatar is on Left visually)
-                        className={`flex w-full gap-3 items-start py-2 ${
+                      <MessageContent
+                        className={cn(
+                          "relative flex flex-col gap-2 rounded-2xl px-4 py-3 text-sm shadow-sm",
+                          "w-fit max-w-[85%] whitespace-pre-wrap break-words",
                           isUser
-                            ? "justify-end"
-                            : "justify-end flex-row-reverse"
-                        }`}
-                      >
-                        {/* BUBBLE CONTENT */}
-                        {/* w-fit: Makes bubble hug the text (fixes "too large") */}
-                        {/* max-w-[80%]: Ensures it wraps before hitting edge */}
-                        <MessageContent
-                          className={`
-                          relative flex flex-col gap-2 rounded-2xl px-4 py-3 text-sm shadow-sm
-                          w-fit max-w-[70%] overflow-hidden whitespace-pre-wrap break-words
-                          ${
-                            isUser
-                              ? "bg-white text-black rounded-br-none"
-                              : "bg-[#27272a] text-white rounded-tl-none"
-                          }
-                        `}
-                        >
-                          {role === "assistant" ? (
-                            <TextGenerateEffect words={textContent} />
-                          ) : (
-                            textContent
-                          )}
-                        </MessageContent>
-
-                        {/* ASSISTANT AVATAR (ORB) */}
-                        {/* Rendered 'after' content in DOM, but visually on LEFT due to flex-row-reverse */}
-                        {!isUser && (
-                          <div className="ring-border size-10 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-0.5  ">
-                            <Orb
-                              className="h-full w-full"
-                              agentState="talking"
-                            />
-                          </div>
+                            ? "bg-white text-black rounded-br-none ml-auto"
+                            : "bg-[#27272a] text-white rounded-tl-none mr-auto overflow-visible"
                         )}
-                      </Message>
-                    );
-                  })
-                )}
-              </ConversationContent>
-              <ConversationScrollButton />
-            </Conversation>
-            <ChatInput />
-          </div>
-        </Card>
-        
-      </div>
-      
-    </>
+                      >
+                        {!isUser && grade !== undefined && (
+                          <GradeBadge grade={grade} />
+                        )}
+                        {!isUser ? (
+                          <TextGenerateEffect words={textContent} />
+                        ) : (
+                          textContent
+                        )}
+                      </MessageContent>
+                    </Message>
+                  );
+                })
+              )}
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
+
+          <ChatInput />
+        </div>
+      </Card>
+    </WavyBackground>
   );
 }
 

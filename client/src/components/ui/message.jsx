@@ -1,17 +1,12 @@
-import type { ComponentProps, HTMLAttributes } from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-
+import * as React from "react"
+import { cva } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 // ------------------------------------------------------------------
 // MESSAGE WRAPPER
 // ------------------------------------------------------------------
-export type MessageProps = HTMLAttributes<HTMLDivElement> & {
-  from: "user" | "assistant"
-}
-
-export const Message = ({ className, from, ...props }: MessageProps) => (
+export const Message = ({ className, from, ...props }) => (
   <div
     data-role={from}
     className={cn(
@@ -28,11 +23,8 @@ export const Message = ({ className, from, ...props }: MessageProps) => (
 // MESSAGE CONTENT (The Bubble)
 // ------------------------------------------------------------------
 const messageContentVariants = cva(
-  // Base styles:
-  // w-fit: shrinks width to match text content
-  // whitespace-pre-wrap: ensures text wraps to next line
-  // break-words: prevents long words from overflowing
-  "relative flex flex-col gap-2 rounded-2xl px-2 py-3 text-sm shadow-sm w-fit max-w-[70%] break-words whitespace-pre-wrap",
+  // REDUCED PADDING AND GAP HERE
+  "relative flex flex-col gap-1 rounded-2xl px-4 py-2.5 text-sm shadow-sm w-fit max-w-[70%] break-words whitespace-pre-wrap",
   {
     variants: {
       variant: {
@@ -56,19 +48,24 @@ const messageContentVariants = cva(
   }
 )
 
-export type MessageContentProps = HTMLAttributes<HTMLDivElement> &
-  VariantProps<typeof messageContentVariants>
-
 export const MessageContent = ({
   children,
   className,
   variant,
+  badge, // <--- 1. Accept a new 'badge' prop
   ...props
-}: MessageContentProps) => (
+}) => (
   <div
-    className={cn(messageContentVariants({ variant, className }))}
+    // 2. Add 'overflow-visible' to allow the badge to hang outside
+    className={cn(messageContentVariants({ variant, className }), "overflow-visible")}
     {...props}
   >
+    {/* 3. Position the badge absolutely in the top-right corner */}
+    {badge && (
+      <div className="absolute -top-3 -right-3 z-10 select-none">
+        {badge}
+      </div>
+    )}
     {children}
   </div>
 )
@@ -76,17 +73,12 @@ export const MessageContent = ({
 // ------------------------------------------------------------------
 // MESSAGE AVATAR
 // ------------------------------------------------------------------
-export type MessageAvatarProps = ComponentProps<typeof Avatar> & {
-  src: string
-  name?: string
-}
-
 export const MessageAvatar = ({
   src,
   name,
   className,
   ...props
-}: MessageAvatarProps) => (
+}) => (
   <Avatar className={cn("size-8 ring-1 ring-border shrink-0", className)} {...props}>
     <AvatarImage alt="Avatar" src={src} />
     <AvatarFallback>{name?.slice(0, 2) || "AI"}</AvatarFallback>

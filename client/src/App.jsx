@@ -11,7 +11,7 @@ function App() {
       <ChatProvider>
         
         {/* <AudioRecorder /> */}
-        <WavyBackground className=" mx-auto">
+        <WavyBackground>
         <ChatConversation />
         </WavyBackground>
       </ChatProvider>
