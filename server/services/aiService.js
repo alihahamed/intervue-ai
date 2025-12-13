@@ -7,10 +7,21 @@ export async function getAiResponse(userTranscript, sysInstructions, history = [
   const groq = new Groq({apiKey:process.env.GROQ_API_KEY})
 
   //  map the array to ensure every item has ONLY 'role' and 'content'
-  const formattedHistory = history.map(msg => ({
-    role: msg.role || (msg.sender === "user" ? "user" : "assistant"), // Handle both 'sender' and 'role' keys
-    content: msg.content || msg.text || "" // Handle both 'text' and 'content' keys
-  }));
+  const formattedHistory = history.map(msg => {
+    // Determine the raw content from either property
+    const rawContent = msg.content || msg.text || "";
+
+    // ⚠️ KEY FIX: If content is an Object (the JSON response), stringify it!
+    // Groq will crash if you send a raw JS Object as 'content'.
+    const stringifiedContent = typeof rawContent === 'object' 
+      ? JSON.stringify(rawContent) 
+      : rawContent;
+
+    return {
+      role: msg.role || (msg.sender === "user" ? "user" : "assistant"),
+      content: stringifiedContent 
+    };
+  });
 
   // Add the system instructions (rules)
   const allMessages = [{role:"system", content:sysInstructions}, ...formattedHistory,{ role: "user", content: userTranscript } ]
@@ -32,7 +43,7 @@ export async function getAiResponse(userTranscript, sysInstructions, history = [
     console.log("Error while fetching the ai response", error)
     return JSON.stringify({
       grade:0,
-      feedback:"NO response generated.",
+      feedback:"No response generated.",
       nextQuestion:""
     })
   }

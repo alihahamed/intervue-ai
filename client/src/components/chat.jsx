@@ -35,7 +35,7 @@ function ChatConversation() {
                   />
                 ) : (
                   message.map((msg, index) => {
-                    const textContent = msg.sender === "assistant" ? `${msg.text.greeting} ${msg.text.grade} ${msg.text.feedback} ${msg.text.nextQuestion}` : msg.text
+                    const textContent = msg.sender === "assistant" ? ` ${msg.text.feedback} ${msg.text.nextQuestion}` : msg.text
                       
                     const role = msg.sender === "user" ? "user" : "assistant";
                     const isUser = role === "user";
