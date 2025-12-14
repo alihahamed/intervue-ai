@@ -11,9 +11,9 @@ function App() {
       <ChatProvider>
         
         {/* <AudioRecorder /> */}
-        <WavyBackground>
+        <>
         <ChatConversation />
-        </WavyBackground>
+        </>
       </ChatProvider>
     </>
   );

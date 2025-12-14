@@ -16,14 +16,9 @@ export const WavyBackground = ({
   ...props
 }) => {
   const noise = createNoise3D();
-  let w,
-    h,
-    nt,
-    i,
-    x,
-    ctx,
-    canvas;
+  let w, h, nt, i, x, ctx, canvas;
   const canvasRef = useRef(null);
+
   const getSpeed = () => {
     switch (speed) {
       case "slow":
@@ -38,25 +33,24 @@ export const WavyBackground = ({
   const init = () => {
     canvas = canvasRef.current;
     ctx = canvas.getContext("2d");
+    
+    // Initial size setup
     w = ctx.canvas.width = window.innerWidth;
     h = ctx.canvas.height = window.innerHeight;
     ctx.filter = `blur(${blur}px)`;
     nt = 0;
-    window.onresize = function () {
-      w = ctx.canvas.width = window.innerWidth;
-      h = ctx.canvas.height = window.innerHeight;
-      ctx.filter = `blur(${blur}px)`;
-    };
+    
     render();
   };
 
   const waveColors = colors ?? [
-    "#38bdf8",
-    "#818cf8",
-    "#c084fc",
-    "#e879f9",
-    "#22d3ee",
+    "#00ff9f", // Spring Green
+    "#10b981", // Emerald
+    "#34d399", // Soft Teal-Green
+    "#00ff00", // Pure Green
+    "#6ee7b7", // Light Emerald
   ];
+
   const drawWave = (n) => {
     nt += getSpeed();
     for (i = 0; i < n; i++) {
@@ -65,7 +59,7 @@ export const WavyBackground = ({
       ctx.strokeStyle = waveColors[i % waveColors.length];
       for (x = 0; x < w; x += 5) {
         var y = noise(x / 800, 0.3 * i, nt) * 100;
-        ctx.lineTo(x, y + h * 0.5); // adjust for height, currently at 50% of the container
+        ctx.lineTo(x, y + h * 0.5);
       }
       ctx.stroke();
       ctx.closePath();
@@ -74,6 +68,9 @@ export const WavyBackground = ({
 
   let animationId;
   const render = () => {
+    // Safety check if canvas still exists
+    if (!ctx) return;
+    
     ctx.fillStyle = backgroundFill || "black";
     ctx.globalAlpha = waveOpacity || 0.5;
     ctx.fillRect(0, 0, w, h);
@@ -83,30 +80,52 @@ export const WavyBackground = ({
 
   useEffect(() => {
     init();
+    
+    // FIX: Use proper event listener instead of window.onresize
+    const handleResize = () => {
+      if (canvasRef.current && ctx) {
+        w = ctx.canvas.width = window.innerWidth;
+        h = ctx.canvas.height = window.innerHeight;
+        ctx.filter = `blur(${blur}px)`;
+      }
+    };
+    
+    window.addEventListener("resize", handleResize);
+    
     return () => {
       cancelAnimationFrame(animationId);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
   const [isSafari, setIsSafari] = useState(false);
   useEffect(() => {
-    // I'm sorry but i have got to support it on safari.
-    setIsSafari(typeof window !== "undefined" &&
-      navigator.userAgent.includes("Safari") &&
-      !navigator.userAgent.includes("Chrome"));
+    setIsSafari(
+      typeof window !== "undefined" &&
+        navigator.userAgent.includes("Safari") &&
+        !navigator.userAgent.includes("Chrome")
+    );
   }, []);
 
   return (
     <div
-      className={cn("h-screen flex flex-col items-center justify-center", containerClassName)}>
+      className={cn(
+        "relative flex flex-col items-center justify-center min-h-[100dvh] w-full overflow-hidden",
+        containerClassName
+      )}
+    >
       <canvas
-        className="absolute inset-0 z-0"
+        // FIX: Changed absolute to FIXED. This stops the height explosion.
+        className="fixed inset-0 z-0 pointer-events-none"
         ref={canvasRef}
         id="canvas"
         style={{
           ...(isSafari ? { filter: `blur(${blur}px)` } : {}),
-        }}></canvas>
-      <div className={cn("relative z-10", className)} {...props}>
+        }}
+      ></canvas>
+      
+      {/* Content Wrapper */}
+      <div className={cn("relative z-10 w-full flex flex-col items-center justify-center", className)} {...props}>
         {children}
       </div>
     </div>

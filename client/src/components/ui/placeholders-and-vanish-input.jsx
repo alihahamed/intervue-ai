@@ -337,7 +337,7 @@ export function PlaceholdersAndVanishInput({
               exit={{ y: -15, opacity: 0 }}
               transition={{ duration: 0.3, ease: "linear" }}
               className={cn(
-                "text-sm sm:text-base font-normal pl-4 sm:pl-12 text-left w-[calc(100%-2rem)] truncate",
+                "text-[13px] sm:text-base font-normal pl-4 sm:pl-12 text-left w-[calc(100%-2rem)] truncate",
                 voiceState === "recording" ? "text-red-400" : "dark:text-zinc-500 text-neutral-500",
               )}
             >
