@@ -43,22 +43,8 @@ function ChatConversation() {
   const { message } = useChat();
 
   return (
-    <WavyBackground className="p-4">
-      <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[750px] md:h-[600px] bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
-        
-        <div className="absolute inset-0 z-0 rounded-xl overflow-hidden pointer-events-none">
-          <GlowingEffect
-            blur={0.4}
-            borderWidth={2}
-            spread={80}
-            glow={true}
-            disabled={false}
-            proximity={64}
-            inactiveZone={0.01}
-            variant="default"
-          />
-        </div>
-
+    <WavyBackground className="p-4">                                        
+      <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-2xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[520px] mt-20 bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
         <div className="flex h-full flex-col z-10 relative w-full">
           <Conversation className="flex-1 overflow-y-auto overflow-x-hidden">
             <ConversationContent className="p-2 md:p-4 space-y-4">

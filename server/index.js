@@ -179,39 +179,33 @@ app.post("/upload-audio", upload.single("audio"), async (req, res) => {
         message: "Error transcribing the audio to text",
         success: false,
       });
-    }
+    } 
 
-    const __filename = fileURLToPath(import.meta.url);
-    const ___dirname = dirname(__filename);
 
-    const tempFileName = `response-${Date.now()}.mp3`;
-    const tempFilePath = path.join(___dirname, "uploads", tempFileName);
+    // const aiResponse = await getAiResponse(userText, systemInstructions, history); // getting the ai response to the user's reply (Text -> AI Response)
+    // console.log("Ai's response to the user", aiResponse);
 
-    const aiResponse = await getAiResponse(userText, systemInstructions, history); // getting the ai response to the user's reply (Text -> AI Response)
-    console.log("Ai's response to the user", aiResponse);
+    // let aiData
 
-    let aiData
+    // try {
+    //   aiData = JSON.parse(aiResponse)
+    //   console.log("ai data:", aiData)
+    // } catch (error) {
+    //     console.log("error parsing json to object")
+    //     aiData = {grade:0, feedback:"Couldnt completed the request", nextQuestion:""}
+    // }
 
-    try {
-      aiData = JSON.parse(aiResponse)
-      console.log("ai data:", aiData)
-    } catch (error) {
-        console.log("error parsing json to object")
-        aiData = {grade:0, feedback:"Couldnt completed the request", nextQuestion:""}
-    }
+    // const cleanText = `${aiData.feedback} ${aiData.nextQuestion}`
+    // console.log("clean text",cleanText)
 
-    const cleanText = `${aiData.feedback} ${aiData.nextQuestion}`
-    console.log("clean text",cleanText)
-
-    const audioBuffer = await TextToSpeech(cleanText); // Raw buffer: 01001000 01100101 , Base64: UklGRi4AAABXQVZFZm10IBIA (Json friendly)
-    const audioBase64 = audioBuffer ? audioBuffer.toString("base64") : null; // converting raw buffer to base64 to send it as a json response to the frontend which would play the audio.
+    // const audioBuffer = await TextToSpeech(cleanText); // Raw buffer: 01001000 01100101 , Base64: UklGRi4AAABXQVZFZm10IBIA (Json friendly)
+    // const audioBase64 = audioBuffer ? audioBuffer.toString("base64") : null; // converting raw buffer to base64 to send it as a json response to the frontend which would play the audio.
 
     
 
     return res.json({
-      userText: userText,
-      aiResponse: aiData,
-      audio: audioBase64,
+      userText:userText,
+      success:true  
     });
   } catch (error) {
     console.log("error while sending data from upload-audio endpoint", error);
@@ -241,7 +235,7 @@ app.post("/upload-text", async (req, res) => {
         aiData = {grade:0, feedback:"Couldnt completed the request", nextQuestion:""}
     } 
 
-    const cleanText = `${aiData.greeting ? aiData.greeting : "" } ${aiData.feedback} ${aiData.nextQuestion}`
+    const cleanText = `${aiData.feedback} ${aiData.nextQuestion}`
     console.log("clean text",cleanText)
 
     const audioBuffer = await TextToSpeech(cleanText);

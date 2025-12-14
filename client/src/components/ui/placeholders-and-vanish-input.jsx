@@ -10,6 +10,8 @@ export function PlaceholdersAndVanishInput({
   onSubmit,
   voiceState = "idle", // "idle" | "recording" | "processing"
   onVoiceClick,
+  value,
+  setValue
 }) {
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0)
 
@@ -43,7 +45,7 @@ export function PlaceholdersAndVanishInput({
   const canvasRef = useRef(null)
   const newDataRef = useRef([])
   const inputRef = useRef(null)
-  const [value, setValue] = useState("")
+  // const [value, setValue] = useState("")
   const [animating, setAnimating] = useState(false)
 
   const draw = useCallback(() => {

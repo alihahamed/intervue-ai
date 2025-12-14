@@ -48,13 +48,23 @@ function ChatInput() {
         }
       );
       console.log("res", res);
+      console.log("flag", res.data.success)
+      if(res.data.success) {
+        setInputText(res.data.userText)
+      }
 
-      addMessage('user', res.data.userText) // adding 'user' message to the context
-      addMessage('assistant', res.data.aiResponse) // adding 'ai' response to the context
-      // console.log("base64 string", res.data.audio) // a long ass paragraph of strings
+      console.log(inputText)
+      console.log(res.data.userText)
+      
 
-      const audio = new Audio("data:audio/mp3;base64," + res.data.audio);
-      audio.play();
+
+
+      // addMessage('user', res.data.userText) // adding 'user' message to the context
+      // addMessage('assistant', res.data.aiResponse) // adding 'ai' response to the context
+      // // console.log("base64 string", res.data.audio) // a long ass paragraph of strings
+
+      // const audio = new Audio("data:audio/mp3;base64," + res.data.audio);
+      // audio.play();
       
     } catch (error) {
       console.error("upload failed:", error); 
@@ -90,7 +100,7 @@ const handleVoiceSubmit = () => {
       content:msg.text
     }))
 
-    console.log("history", history)
+    addMessage("user", inputText);
 
     try {
       const response = await axios.post("http://localhost:3021/upload-text", {
@@ -100,7 +110,7 @@ const handleVoiceSubmit = () => {
       });
 
       console.log(response);
-      addMessage("user", response.data.userText);
+      
       addMessage("assistant", response.data.aiResponse);
 
       const audio = new Audio("data:audio/mp3;base64," + response.data.audio);
@@ -119,7 +129,8 @@ const handleVoiceSubmit = () => {
         onChange={(e) => setInputText(e.target.value)}
         voiceState={voiceStatus}
         onVoiceClick={handleVoiceSubmit}
-        
+        value={inputText}
+        setValue={setInputText} 
       />
     </div>
   );
