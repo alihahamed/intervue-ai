@@ -7,6 +7,13 @@ export const ChatProvider = ({children}) => {
     const [message, setMessage] = useState([])
     const [isProcessing, setIsProcessing] = useState("")
     const [selectNiche, setSelectNiche] = useState("Hooks")
+    const [survey, setSurvey] = useState({
+        userName:"",
+        currentRole:"",
+        experience:"",
+        techStack:"",
+        targetRole:"",
+    })
 
     const addMessage = (sender, text, audioBase64 = null ) => {
         setMessage((prev) => [...prev, {
@@ -17,7 +24,7 @@ export const ChatProvider = ({children}) => {
     }
 
     return (
-        <ChatContext.Provider value={{message, isProcessing, setIsProcessing, addMessage, selectNiche, setSelectNiche}}>
+        <ChatContext.Provider value={{message, isProcessing, setIsProcessing, addMessage, selectNiche, setSelectNiche, survey , setSurvey}}>
             {children}
         </ChatContext.Provider>
     )

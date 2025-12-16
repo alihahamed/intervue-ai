@@ -44,12 +44,12 @@ export const WavyBackground = ({
   };
 
   const waveColors = colors ?? [
-    "#00ff9f", // Spring Green
-    "#10b981", // Emerald
-    "#34d399", // Soft Teal-Green
-    "#00ff00", // Pure Green
-    "#6ee7b7", // Light Emerald
-  ];
+    "#3b82f6", // Blue 500 (Bright primary blue)
+    "#0ea5e9", // Sky 500 (Vibrant light blue)
+    "#60a5fa", // Blue 400 (Softer blue)
+    "#2563eb", // Blue 600 (Deeper blue for contrast)
+    "#06b6d4", // Cyan 500 (Adds a techy teal accent)
+];
 
   const drawWave = (n) => {
     nt += getSpeed();

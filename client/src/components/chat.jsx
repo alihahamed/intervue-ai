@@ -47,7 +47,7 @@ function ChatConversation() {
     <WavyBackground className="p-4">
       <div className="font-bold text-3xl md:text-5xl lg:text-[68px] mb-5 text-center">
         <h1>
-          Master Your <span className="text-lime-400">Next Interview.</span>
+          Master Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-sky-600">Next Interview.</span>
         </h1>
       </div>
       <div className="text-sm md:text-lg mb-3 text-center text-gray-300">

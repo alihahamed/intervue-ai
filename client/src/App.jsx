@@ -4,6 +4,7 @@ import "./App.css";
 import ChatConversation from "./components/chat";
 import { WavyBackground } from "./components/ui/wavy-background";
 import ChatInput from './components/chatInput'
+import SurveyModal from "./components/surveyModal";
 
 function App() {
   return (
@@ -12,7 +13,8 @@ function App() {
         
         {/* <AudioRecorder /> */}
         <>
-        <ChatConversation />
+        {/* <ChatConversation /> */}
+        <SurveyModal />
         </>
       </ChatProvider>
     </>
