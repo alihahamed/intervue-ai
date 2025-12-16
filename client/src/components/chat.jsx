@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { GlowingEffect } from "./ui/glowing-effect";
 import ChatInput from "./chatInput";
 import { WavyBackground } from "./ui/wavy-background";
+import { HoverBorderGradient } from "./ui/hover-border-gradient";
 
 const GradeBadge = ({ grade }) => {
   if (grade === null || grade === undefined) return null;
@@ -43,8 +44,42 @@ function ChatConversation() {
   const { message } = useChat();
 
   return (
-    <WavyBackground className="p-4">                                        
-      <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-2xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[520px] mt-20 bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+    <WavyBackground className="p-4">
+      <div className="font-bold text-3xl md:text-5xl lg:text-[68px] mb-5 text-center">
+        <h1>
+          Master Your <span className="text-lime-400">Next Interview.</span>
+        </h1>
+      </div>
+      <div className="text-sm md:text-lg mb-3 text-center text-gray-300">
+        <p>
+          An autonomous interview agent that listens, processes, and speaks.
+          Built with SLMs for rapid reasoning and realistic speech interaction.
+        </p>
+      </div>
+      <div className="gap-1 flex ">
+        <HoverBorderGradient
+          containerClassName="rounded-full"
+          as="button"
+          className="bg-teal-400 text-black text-xs font-semibold px-2.5 py-0.5"
+        >
+          React
+        </HoverBorderGradient>
+        <HoverBorderGradient
+          containerClassName="rounded-full"
+          as="button"
+          className="bg-green-600 text-black text-xs font-semibold px-2.5 py-0.5" // Applied Badge styles here
+        >
+          NodeJs
+        </HoverBorderGradient>
+        <HoverBorderGradient
+          containerClassName="rounded-full"
+          as="button"
+          className="bg-yellow-300 text-black text-xs font-semibold px-2.5 py-0.5" // Applied Badge styles here
+        >
+          SLM's
+        </HoverBorderGradient>
+      </div>
+      <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-2xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[520px] mt-14 bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
         <div className="flex h-full flex-col z-10 relative w-full">
           <Conversation className="flex-1 overflow-y-auto overflow-x-hidden">
             <ConversationContent className="p-2 md:p-4 space-y-4">
