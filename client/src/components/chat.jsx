@@ -44,12 +44,11 @@ const GradeBadge = ({ grade }) => {
 
 function ChatConversation() {
   const { message, isProcessing, setIsProcessing } = useChat();
-  
 
   return (
     <WavyBackground className="p-4">
       {console.log(isProcessing)}
-      <div className="font-bold text-4xl md:text-5xl lg:text-[68px] relative bottom-18 text-center">
+      <div className="font-bold text-4xl md:text-5xl lg:text-[68px] mt-20 mb-6 text-center tracking-tight z-10">
         <h1>
           Master Your{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-sky-600">
@@ -57,38 +56,44 @@ function ChatConversation() {
           </span>
         </h1>
       </div>
-      <div className="text-sm md:text-lg relative bottom-12 text-center text-gray-300">
+
+      {/* 2. Description - Removed 'relative bottom-12', used standard margins */}
+      <div className="text-sm md:text-lg text-center text-gray-300 leading-relaxed max-w-2xl mx-auto mb-8 px-4 z-10">
         <p>
           An autonomous interview agent that listens, processes, and speaks.
           Built with SLMs for rapid reasoning and realistic speech interaction.
         </p>
       </div>
-      <div className="gap-1 flex relative bottom-10">
+
+      {/* 3. Pills - Removed 'relative bottom-10', kept standard flex layout */}
+      <div className="gap-3 flex justify-center items-center mb-10 z-10">
         <HoverBorderGradient
           containerClassName="rounded-full"
           as="button"
-          className="bg-teal-400 text-black text-xs font-semibold px-2.5 py-0.5"
+          className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 text-xs font-semibold px-4 py-1.5 transition-colors"
         >
           React
         </HoverBorderGradient>
+
         <HoverBorderGradient
           containerClassName="rounded-full"
           as="button"
-          className="bg-green-600 text-black text-xs font-semibold px-2.5 py-0.5" // Applied Badge styles here
+          className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 text-xs font-semibold px-4 py-1.5 transition-colors"
         >
           NodeJs
         </HoverBorderGradient>
+
         <HoverBorderGradient
           containerClassName="rounded-full"
           as="button"
-          className="bg-yellow-300 text-black text-xs font-semibold px-2.5 py-0.5" // Applied Badge styles here
+          className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 text-xs font-semibold px-4 py-1.5 transition-colors"
         >
           SLM's
         </HoverBorderGradient>
       </div>
 
       {isProcessing ? (
-        <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[480px] mt-10 bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+        <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[480px]  bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
           <div className="flex h-full flex-col z-10 relative w-full">
             <Conversation className="flex-1 overflow-y-auto overflow-x-hidden">
               <ConversationContent className="p-2 md:p-4 space-y-4">

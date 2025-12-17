@@ -58,7 +58,7 @@ function SurveyModal() {
               <div className="space-y-6">
                 {/* QUESTION 01: NAME */}
                 <div className={`transition-all duration-500 ${currentStep > 1 ? "opacity-50" : "opacity-100"}`}>
-                  <label className="text-xs text-indigo-400 uppercase tracking-wider ml-1">What's Your Name?</label>
+                  <label className="text-sm font-mono text-indigo-400 uppercase tracking-wider ml-1">What's Your Name?</label>
                   <Input
                     type="text"
                     value={survey.userName}
@@ -74,8 +74,8 @@ function SurveyModal() {
                 {/* QUESTION 02: EXPERIENCE */}
                 {currentStep >= 2 && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <label className="text-xs font-mono text-purple-400 uppercase tracking-wider ml-1">
-                      02. Years of Experience
+                    <label className="text-sm font-mono text-purple-400 uppercase tracking-wider ml-1">
+                      Years of Experience
                     </label>
                     <Select
                       value={survey.experience}
@@ -153,7 +153,7 @@ function SurveyModal() {
                   </div>
                 )}
 
-                <div className="pt-2 text-zinc-500 text-sm animate-pulse">
+                <div className="pt-2 text-zinc-400 text-sm animate-pulse">
                   Press Enter ↵ to {currentStep === 4 ? "start interview" : "continue"}
                 </div>
               </div>
