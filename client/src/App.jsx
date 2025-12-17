@@ -13,7 +13,7 @@ function App() {
         
         {/* <AudioRecorder /> */}
         <>
-        {/* <ChatConversation /> */}
+        <ChatConversation />
         <SurveyModal />
         </>
       </ChatProvider>

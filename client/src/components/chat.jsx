@@ -5,6 +5,7 @@ import {
   ConversationScrollButton,
 } from "@/components/ui/conversation";
 import { useChat } from "../createContext";
+import { useState } from "react";
 
 import { Orb } from "./ui/Orb";
 import { Message, MessageContent } from "./ui/message";
@@ -16,6 +17,7 @@ import { GlowingEffect } from "./ui/glowing-effect";
 import ChatInput from "./chatInput";
 import { WavyBackground } from "./ui/wavy-background";
 import { HoverBorderGradient } from "./ui/hover-border-gradient";
+import { Button } from "./ui/moving-border";
 
 const GradeBadge = ({ grade }) => {
   if (grade === null || grade === undefined) return null;
@@ -41,22 +43,27 @@ const GradeBadge = ({ grade }) => {
 };
 
 function ChatConversation() {
-  const { message } = useChat();
+  const { message, isProcessing, setIsProcessing } = useChat();
+  
 
   return (
     <WavyBackground className="p-4">
-      <div className="font-bold text-3xl md:text-5xl lg:text-[68px] mb-5 text-center">
+      {console.log(isProcessing)}
+      <div className="font-bold text-4xl md:text-5xl lg:text-[68px] relative bottom-18 text-center">
         <h1>
-          Master Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-sky-600">Next Interview.</span>
+          Master Your{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-sky-600">
+            Next Interview.
+          </span>
         </h1>
       </div>
-      <div className="text-sm md:text-lg mb-3 text-center text-gray-300">
+      <div className="text-sm md:text-lg relative bottom-12 text-center text-gray-300">
         <p>
           An autonomous interview agent that listens, processes, and speaks.
           Built with SLMs for rapid reasoning and realistic speech interaction.
         </p>
       </div>
-      <div className="gap-1 flex ">
+      <div className="gap-1 flex relative bottom-10">
         <HoverBorderGradient
           containerClassName="rounded-full"
           as="button"
@@ -79,71 +86,81 @@ function ChatConversation() {
           SLM's
         </HoverBorderGradient>
       </div>
-      <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[480px] mt-10 bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
-        <div className="flex h-full flex-col z-10 relative w-full">
-          <Conversation className="flex-1 overflow-y-auto overflow-x-hidden">
-            <ConversationContent className="p-2 md:p-4 space-y-4">
-              {message.length === 0 ? (
-                <ConversationEmptyState
-                  icon={<Orb className="size-12" agentState="listening" />}
-                  title="No messages yet"
-                  description="Start a conversation to see messages here"
-                />
-              ) : (
-                message.map((msg, index) => {
-                  const isUser = msg.sender === "user";
-                  const textContent = isUser
-                    ? msg.text
-                    : `${msg.text.feedback || ""} ${
-                        msg.text.nextQuestion || ""
-                      }`;
-                  const grade = !isUser ? msg.text.grade : undefined;
 
-                  return (
-                    <Message
-                      key={msg.id || index}
-                      from={isUser ? "user" : "assistant"}
-                      className={`flex w-full gap-2 md:gap-3 items-start py-1 md:py-2 ${
-                        isUser ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      {!isUser && (
-                        <div className="ring-border size-6 md:size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
-                          <Orb className="h-full w-full" agentState="talking" />
-                        </div>
-                      )}
+      {isProcessing ? (
+        <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[480px] mt-10 bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+          <div className="flex h-full flex-col z-10 relative w-full">
+            <Conversation className="flex-1 overflow-y-auto overflow-x-hidden">
+              <ConversationContent className="p-2 md:p-4 space-y-4">
+                {message.length === 0 ? (
+                  <ConversationEmptyState
+                    icon={<Orb className="size-12" agentState="listening" />}
+                    title="No messages yet"
+                    description="Start a conversation to see messages here"
+                  />
+                ) : (
+                  message.map((msg, index) => {
+                    const isUser = msg.sender === "user";
+                    const textContent = isUser
+                      ? msg.text
+                      : `${msg.text.feedback || ""} ${
+                          msg.text.nextQuestion || ""
+                        }`;
+                    const grade = !isUser ? msg.text.grade : undefined;
 
-                      <MessageContent
-                        className={cn(
-                          "relative flex flex-col gap-2 rounded-2xl px-3 py-2 md:px-4 md:py-3 text-sm shadow-sm",
-                          "w-fit max-w-[90%] md:max-w-[85%] whitespace-pre-wrap break-words",
-                          isUser
-                            ? "bg-white text-black rounded-br-none ml-auto"
-                            : "bg-[#27272a] text-white rounded-tl-none mr-auto overflow-visible"
-                        )}
+                    return (
+                      <Message
+                        key={msg.id || index}
+                        from={isUser ? "user" : "assistant"}
+                        className={`flex w-full gap-2 md:gap-3 items-start py-1 md:py-2 ${
+                          isUser ? "justify-end" : "justify-start"
+                        }`}
                       >
-                        {!isUser && grade !== undefined && (
-                          <GradeBadge grade={grade} />
+                        {!isUser && (
+                          <div className="ring-border size-6 md:size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
+                            <Orb
+                              className="h-full w-full"
+                              agentState="talking"
+                            />
+                          </div>
                         )}
-                        {!isUser ? (
-                          <TextGenerateEffect words={textContent} />
-                        ) : (
-                          textContent
-                        )}
-                      </MessageContent>
-                    </Message>
-                  );
-                })
-              )}
-            </ConversationContent>
-            <ConversationScrollButton />
-          </Conversation>
 
-          <div className="p-2 md:p-0">
-            <ChatInput />
+                        <MessageContent
+                          className={cn(
+                            "relative flex flex-col gap-2 rounded-2xl px-3 py-2 md:px-4 md:py-3 text-sm shadow-sm",
+                            "w-fit max-w-[90%] md:max-w-[85%] whitespace-pre-wrap break-words",
+                            isUser
+                              ? "bg-white text-black rounded-br-none ml-auto"
+                              : "bg-[#27272a] text-white rounded-tl-none mr-auto overflow-visible"
+                          )}
+                        >
+                          {!isUser && grade !== undefined && (
+                            <GradeBadge grade={grade} />
+                          )}
+                          {!isUser ? (
+                            <TextGenerateEffect words={textContent} />
+                          ) : (
+                            textContent
+                          )}
+                        </MessageContent>
+                      </Message>
+                    );
+                  })
+                )}
+              </ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
+
+            <div className="p-2 md:p-0">
+              <ChatInput />
+            </div>
           </div>
+        </Card>
+      ) : (
+        <div className="flex items-center justify-center">
+          <Button onClick={() => setIsProcessing(true)}>Get started</Button>
         </div>
-      </Card>
+      )}
     </WavyBackground>
   );
 }

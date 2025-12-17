@@ -5,14 +5,13 @@ import { ChatContext } from "./createContext"
 
 export const ChatProvider = ({children}) => {
     const [message, setMessage] = useState([])
-    const [isProcessing, setIsProcessing] = useState("")
+    const [isProcessing, setIsProcessing] = useState(false)
     const [selectNiche, setSelectNiche] = useState("Hooks")
     const [survey, setSurvey] = useState({
-        userName:"",
-        currentRole:"",
-        experience:"",
-        techStack:"",
-        targetRole:"",
+        userName:"Ali",
+        experience:"No Experience",
+        techStack:"React, Nodejs",
+        targetRole:"Frontend Developer",
     })
 
     const addMessage = (sender, text, audioBase64 = null ) => {

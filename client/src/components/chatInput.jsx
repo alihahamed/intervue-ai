@@ -14,7 +14,7 @@ function ChatInput() {
   ];
 
   const [inputText, setInputText] = useState("");
-  const { message ,addMessage, setSelectNiche, selectNiche } = useChat();
+  const { message ,addMessage, setSelectNiche, selectNiche, survey } = useChat();
   const [isUploading, setIsUploading] = useState(false)
 
   const handleAudioUpload = async (blobUrl) => {
@@ -56,16 +56,6 @@ function ChatInput() {
       console.log(inputText)
       console.log(res.data.userText)
       
-
-
-
-      // addMessage('user', res.data.userText) // adding 'user' message to the context
-      // addMessage('assistant', res.data.aiResponse) // adding 'ai' response to the context
-      // // console.log("base64 string", res.data.audio) // a long ass paragraph of strings
-
-      // const audio = new Audio("data:audio/mp3;base64," + res.data.audio);
-      // audio.play();
-      
     } catch (error) {
       console.error("upload failed:", error); 
     } finally {
@@ -105,8 +95,8 @@ const handleVoiceSubmit = () => {
     try {
       const response = await axios.post("http://localhost:3021/upload-text", {
         text: inputText,
-        niche: selectNiche,
-        history:history
+        history:history,
+        survey:survey
       });
 
       console.log(response);
