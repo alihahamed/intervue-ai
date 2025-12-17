@@ -7,8 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // This sets Outfit as the default font for the class 'font-sans'
-        sans: ['Outfit', 'sans-serif'],
+        vintage: ['"Parisienne"', 'cursive'],
       },
     },
   },

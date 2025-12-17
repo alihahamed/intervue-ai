@@ -20,7 +20,7 @@ function ChatInput() {
   const handleAudioUpload = async (blobUrl) => {
     try {
       setIsUploading(true)
-      const response = await fetch(mediaBlobUrl); // the mediaBlobUrl is internally updated whenever an audio is recorded. commenting here to prevent confusion
+      const response = await fetch(blobUrl); // the mediaBlobUrl is internally updated whenever an audio is recorded. commenting here to prevent confusion
       const audioBlob = await response.blob();
 
       const history = message.map(msg => ({
@@ -28,11 +28,11 @@ function ChatInput() {
       content:msg.text
     }))
 
-    console.log("Audio Size:", audioBlob.size); 
-    if (audioBlob.size < 1000) {
-        console.error("Audio file is too small/empty!");
-        return;
-    }
+    // console.log("Audio Size:", audioBlob.size); 
+    // if (audioBlob.size < 1000) {
+    //     console.error("Audio file is too small/empty!");
+    //     return;
+    // }
 
       const formData = new FormData();
       formData.append("audio", audioBlob, "voice-audio.wav"); // 'audio' is the name being assigned so that the multer in the backend recoginzes it or else it would be rejected

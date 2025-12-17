@@ -51,14 +51,14 @@ function ChatConversation() {
       <div className="font-bold text-4xl md:text-5xl lg:text-[68px]  mb-6 text-center tracking-tight z-10">
         <h1>
           Master Your{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-sky-600">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-sky-700">
             Next Interview.
           </span>
         </h1>
       </div>
 
       {/* 2. Description - Removed 'relative bottom-12', used standard margins */}
-      <div className="text-sm md:text-lg text-center text-gray-300 leading-relaxed max-w-2xl mx-auto mb-8 px-4 z-10">
+      <div className="text-sm md:text-lg text-center text-gray-200 leading-relaxed max-w-2xl mx-auto mb-8 px-4 z-10">
         <p>
           An autonomous interview agent that listens, processes, and speaks.
           Built with SLMs for rapid reasoning and realistic speech interaction.

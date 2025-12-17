@@ -32,24 +32,24 @@ function SurveyModal() {
   }
 
   const inputStyles =
-    "w-full bg-transparent border-0 border-b-2 border-zinc-700 rounded-none text-white text-2xl py-2 px-0 h-auto focus:border-white focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors placeholder:text-zinc-700"
+    "w-full bg-transparent border-0 border-b-2 border-zinc-700 rounded-none text-white text-lg md:text-xl py-2 px-0 h-auto focus:border-white focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors placeholder:text-zinc-700"
 
   return (
     <>
       {isProcessing && currentStep < 5 && (
-        <div className="fixed inset-0 z-50 flex w-screen h-screen bg-black text-white overflow-hidden font-sans">
+        <div className="fixed inset-0 z-50 flex w-screen h-screen bg-black text-white overflow-hidden">
           {/* =========================================
       LEFT COLUMN: Form & Content
       ========================================= */}
           <div className="w-full lg:w-1/2 h-full flex flex-col justify-between p-8 sm:p-16 relative z-10">
             {/* Optional: Branding/Header at Top Left */}
-            <div className="absolute top-12 left-16">
-              <h1 className="text-xl font-bold tracking-widest uppercase text-white bg-red-600">Interview // Setup</h1>
-            </div>
+            {/* <div className="absolute top-12 left-16">
+              <h1 className="text-xl font-bold tracking-widest uppercase text-white bg-red-600 p-3">Interview // Setup</h1>
+            </div> */}
 
             <div className="w-full max-w-lg flex flex-col gap-6 mt-auto">
               <div className="mb-4">
-                <h2 className="text-4xl md:text-5xl font-bold leading-tight">
+                <h2 className="text-5xl md:text-[65px] vintage tracking-wide">
                   Let's tailor your <br />
                   <span className="text-blue-600">experience.</span>
                 </h2>
@@ -58,7 +58,7 @@ function SurveyModal() {
               <div className="space-y-6">
                 {/* QUESTION 01: NAME */}
                 <div className={`transition-all duration-500 ${currentStep > 1 ? "opacity-50" : "opacity-100"}`}>
-                  <label className="text-sm font-mono text-indigo-400 uppercase tracking-wider ml-1">What's Your Name?</label>
+                  <label className="text-sm  text-indigo-400 uppercase tracking-wider ml-1">What's Your Name?</label>
                   <Input
                     type="text"
                     value={survey.userName}
@@ -110,7 +110,7 @@ function SurveyModal() {
                 {/* QUESTION 03: TECH STACK */}
                 {currentStep >= 3 && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <label className="text-xs font-mono text-cyan-400 uppercase tracking-wider ml-1">Tech Stack</label>
+                    <label className="text-xs  text-cyan-400 uppercase tracking-wider ml-1">Tech Stack</label>
                     <Input
                       ref={stackRef}
                       type="text"
@@ -126,7 +126,7 @@ function SurveyModal() {
                 {/* QUESTION 04: TARGET ROLE */}
                 {currentStep >= 4 && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <label className="text-xs font-mono text-cyan-400 uppercase tracking-wider ml-1">
+                    <label className="text-xs  text-cyan-400 uppercase tracking-wider ml-1">
                       Target Role?
                     </label>
                     <Input
