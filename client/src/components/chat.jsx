@@ -48,7 +48,7 @@ function ChatConversation() {
   return (
     <WavyBackground className="p-4">
       {console.log(isProcessing)}
-      <div className="font-bold text-4xl md:text-5xl lg:text-[68px] mt-20 mb-6 text-center tracking-tight z-10">
+      <div className="font-bold text-4xl md:text-5xl lg:text-[68px]  mb-6 text-center tracking-tight z-10">
         <h1>
           Master Your{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-sky-600">
