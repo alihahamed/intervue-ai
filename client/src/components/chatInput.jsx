@@ -3,6 +3,7 @@ import { useChat } from "../createContext";
 import { useState } from "react";
 import axios from "axios";
 import { useReactMediaRecorder } from "react-media-recorder";
+import { useEffect } from "react";
 
 function ChatInput() {
   const placeholders = [
@@ -106,22 +107,19 @@ function ChatInput() {
 
       const triviaObject = response.data.aiResponse.options;
 
-      const triviaOptions = triviaObject.map((triv) =>
-        triv
-      );
+      const triviaOptions = triviaObject.map((triv) => triv);
 
       // addMessage("options", triviaOptions)
-
-      
 
       // const result = console.log("This prints to the screen");
       // console.log("But the value of result is:", result);
 
       console.log("trivia options", triviaOptions);
-      
 
       addMessage("assistant", response.data.aiResponse);
-      console.log("message context data", message)
+      console.log("message context data", message);
+
+      
 
       const audio = new Audio("data:audio/mp3;base64," + response.data.audio);
       audio.play();
@@ -129,6 +127,17 @@ function ChatInput() {
       console.log("Upload-text error", error);
     }
   };
+  
+  useEffect(() => {
+      const optionSender = message.map((msg, index) => // implicit return (without any curly braces or brackets)
+        msg.sender === "chosenOption" ? msg.text : null 
+      );
+
+      console.log("option sender", optionSender);
+      setInputText(optionSender)
+  }, [message])
+
+  
 
   return (
     <div>
