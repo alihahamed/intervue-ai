@@ -107,7 +107,7 @@ function ChatInput() {
 
       const triviaObject = response.data.aiResponse.options;
 
-      const triviaOptions = triviaObject.map((triv) => triv);
+      const triviaOptions = triviaObject ? triviaObject.map((triv) => triv) : null
 
       // addMessage("options", triviaOptions)
 
@@ -129,12 +129,14 @@ function ChatInput() {
   };
   
   useEffect(() => {
-      const optionSender = message.map((msg, index) => // implicit return (without any curly braces or brackets)
-        msg.sender === "chosenOption" ? msg.text : null 
-      );
+      if(message.length > 0) {
+        const lastMsg = message[message.length - 1] // grabbing the last message in the history
 
-      console.log("option sender", optionSender);
-      setInputText(optionSender)
+        if(lastMsg.sender === "chosenOption") { // only update the input if the send option function was clicked
+          console.log("Setting input to:", lastMsg.text);
+             setInputText(lastMsg.text);
+        }
+      }
   }, [message])
 
   

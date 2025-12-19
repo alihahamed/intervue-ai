@@ -82,11 +82,10 @@ app.post("/upload-text", async (req, res) => {
   const history = req.body.history; // THE CHAT HISTORY CONVERSTATION
   const surveyData = req.body.survey; // SURVEY DATA FROM THE MODAL
 
-  console.log("survey data", surveyData);
   console.log(history);
 
   const systemInstructions = await SysInstruction(surveyData);
-  console.log("system instructions", systemInstructions)
+  
 
   try {
     const aiResponse = await getAiResponse(
@@ -94,7 +93,7 @@ app.post("/upload-text", async (req, res) => {
       systemInstructions,
       history
     );
-    console.log("Text endpoint ai response to the user:", aiResponse);
+    // console.log("Text endpoint ai response to the user:", aiResponse);
 
     let aiData;
 
@@ -111,7 +110,7 @@ app.post("/upload-text", async (req, res) => {
     }
 
     const cleanText = `${aiData.feedback} ${aiData.nextQuestion}`;
-    console.log("clean text", cleanText);
+    // console.log("clean text", cleanText);
 
     const audioBuffer = await TextToSpeech(cleanText);
     const audioBase64 = audioBuffer ? audioBuffer.toString("base64") : null;

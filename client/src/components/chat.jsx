@@ -43,14 +43,18 @@ const GradeBadge = ({ grade }) => {
 };
 
 function ChatConversation() {
-  const { addMessage ,message, isProcessing, setIsProcessing } = useChat();
+  const {
+    addMessage,
+    message,
+    isProcessing,
+    setIsProcessing,
+    handleOptionUpdate,
+  } = useChat();
 
   const handleOption = (option) => {
-    addMessage("chosenOption", option)
-    console.log("chosen option", option)
-  }
-
- 
+    handleOptionUpdate(option);
+    console.log("chosen option", option);
+  };
 
   return (
     <WavyBackground className="p-4">
@@ -73,7 +77,7 @@ function ChatConversation() {
       </div>
 
       {/* 3. Pills - Removed 'relative bottom-10', kept standard flex layout */}
-      <div className="gap-3 flex justify-center items-center mb-10 z-10">
+      <div className="gap-3 flex justify-center items-center mb-5 z-10">
         <HoverBorderGradient
           containerClassName="rounded-full"
           as="button"
@@ -100,7 +104,7 @@ function ChatConversation() {
       </div>
 
       {isProcessing ? (
-        <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[480px]  bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+        <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[490px]  bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
           <div className="flex h-full flex-col z-10 relative w-full">
             <Conversation className="flex-1 overflow-y-auto overflow-x-hidden">
               <ConversationContent className="p-2 md:p-4 space-y-4">
@@ -112,19 +116,30 @@ function ChatConversation() {
                   />
                 ) : (
                   message.map((msg, index) => {
+                    if (msg.sender === "chosenOption") return null;
                     const isUser = msg.sender === "user";
-                    const isOptions = msg.sender === "chosenOption"
+                    const isOptions = msg.sender === "chosenOption";
                     const textContent = isUser
                       ? msg.text
                       : `${msg.text.feedback || ""} ${
                           msg.text.nextQuestion || ""
                         }`;
                     const grade = !isUser ? msg.text.grade : undefined;
-                    const options = !isUser && !isOptions ? msg.text.options.map((opt) => (
-                      <button className="bg-white text-black" onClick={() => handleOption(opt)} key={opt}>{opt}</button>
-                    )) : <p>brr brr patapim</p> // incorrect logic ( will fix tomoroww ffs)
-                    
-                    
+                    const options =
+                      !isUser && !isOptions && msg.text.options
+                        ? msg.text.options.map((opt) => (
+                            <button
+                              // w-fit: only as wide as the text
+                              // bg-transparent/10: subtle background
+                              // border-white/20: nice visible border
+                              className="w-fit text-left bg-white/5 border border-white/20 text-white px-3 py-1.5 rounded-full text-xs hover:bg-white/20 transition-colors"
+                              onClick={() => handleOption(opt)}
+                              key={opt}
+                            >
+                              {opt}
+                            </button>
+                          ))
+                        : null;
 
                     return (
                       <Message
@@ -134,6 +149,7 @@ function ChatConversation() {
                           isUser ? "justify-end" : "justify-start"
                         }`}
                       >
+                        {/* AVATAR (Unchanged) */}
                         {!isUser && (
                           <div className="ring-border size-6 md:size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
                             <Orb
@@ -143,9 +159,11 @@ function ChatConversation() {
                           </div>
                         )}
 
+                        {/* BUBBLE CONTENT */}
                         <MessageContent
                           className={cn(
-                            "relative flex flex-col gap-2 rounded-2xl px-3 py-2 md:px-4 md:py-3 text-sm shadow-sm",
+                            // Added 'flex flex-col gap-3' to space out text and buttons
+                            "relative flex flex-col gap-3 rounded-2xl px-4 py-3 text-sm shadow-sm",
                             "w-fit max-w-[90%] md:max-w-[85%] whitespace-pre-wrap break-words",
                             isUser
                               ? "bg-white text-black rounded-br-none ml-auto"
@@ -155,12 +173,22 @@ function ChatConversation() {
                           {!isUser && grade !== undefined && (
                             <GradeBadge grade={grade} />
                           )}
-                          {!isUser ? (
-                            <TextGenerateEffect words={textContent} />
-                          ) : (
-                            textContent
+
+                          {/* TEXT */}
+                          <div>
+                            {!isUser ? (
+                              <TextGenerateEffect words={textContent} />
+                            ) : (
+                              textContent
+                            )}
+                          </div>
+
+                          {/* OPTIONS - RENDERED INSIDE */}
+                          {options && (
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {options}
+                            </div>
                           )}
-                          {options}
                         </MessageContent>
                       </Message>
                     );
