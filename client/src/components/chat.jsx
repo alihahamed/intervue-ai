@@ -44,7 +44,6 @@ const GradeBadge = ({ grade }) => {
 
 function ChatConversation() {
   const { addMessage ,message, isProcessing, setIsProcessing } = useChat();
-  const [option, setOption] = useState("")
 
   const handleOption = (option) => {
     addMessage("chosenOption", option)
@@ -123,7 +122,7 @@ function ChatConversation() {
                     const grade = !isUser ? msg.text.grade : undefined;
                     const options = !isUser && !isOptions ? msg.text.options.map((opt) => (
                       <button className="bg-white text-black" onClick={() => handleOption(opt)} key={opt}>{opt}</button>
-                    )) : null
+                    )) : <p>brr brr patapim</p> // incorrect logic ( will fix tomoroww ffs)
                     
                     
 
