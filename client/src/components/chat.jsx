@@ -45,6 +45,8 @@ const GradeBadge = ({ grade }) => {
 function ChatConversation() {
   const { message, isProcessing, setIsProcessing } = useChat();
 
+ 
+
   return (
     <WavyBackground className="p-4">
       {console.log(isProcessing)}
@@ -106,12 +108,18 @@ function ChatConversation() {
                 ) : (
                   message.map((msg, index) => {
                     const isUser = msg.sender === "user";
+                    const isOptions = msg.sender === "option"
                     const textContent = isUser
                       ? msg.text
                       : `${msg.text.feedback || ""} ${
                           msg.text.nextQuestion || ""
                         }`;
                     const grade = !isUser ? msg.text.grade : undefined;
+                    const options = !isUser ? msg.text.options.map((opt) => (
+                      <li key={opt}>{opt}</li>
+                    )) : null
+                    console.log("options", options)
+                    
 
                     return (
                       <Message
@@ -147,6 +155,7 @@ function ChatConversation() {
                           ) : (
                             textContent
                           )}
+                          {options}
                         </MessageContent>
                       </Message>
                     );
