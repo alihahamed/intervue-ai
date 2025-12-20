@@ -6,6 +6,9 @@ import {
 } from "@/components/ui/conversation";
 import { useChat } from "../createContext";
 import { useState } from "react";
+import { gsap } from "gsap";
+import { useGSAP } from "@gsap/react";
+import { SplitText } from "gsap/SplitText";
 
 import { Orb } from "./ui/Orb";
 import { Message, MessageContent } from "./ui/message";
@@ -18,6 +21,8 @@ import ChatInput from "./chatInput";
 import { WavyBackground } from "./ui/wavy-background";
 import { HoverBorderGradient } from "./ui/hover-border-gradient";
 import { Button } from "./ui/moving-border";
+
+
 
 const GradeBadge = ({ grade }) => {
   if (grade === null || grade === undefined) return null;
@@ -56,13 +61,31 @@ function ChatConversation() {
     console.log("chosen option", option);
   };
 
+  // gsap animations
+
+  gsap.registerPlugin(SplitText);
+
+  useGSAP(() => {
+    const heroSplit = new SplitText(".heroText span", {type:"chars,  words"});
+
+    gsap.from(heroSplit.chars, {
+      opacity:0,
+      duration:1.7,
+      ease:'expo.out',
+      stagger:{ amount: 0.7 },
+      alpha:0,
+      y:30
+      
+    })
+  });
+
   return (
     <WavyBackground className="p-4">
       {console.log(isProcessing)}
       <div className="font-bold text-4xl md:text-5xl lg:text-[68px]  mb-6 text-center tracking-tight z-10">
-        <h1>
-          Master Your{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-sky-700">
+        <h1 className="heroText">
+          <span>Master Your</span>{" "}
+          <span className="text-blue-400">
             Next Interview.
           </span>
         </h1>
