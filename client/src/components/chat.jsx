@@ -52,7 +52,7 @@ function ChatConversation() {
     isProcessing,
     setIsProcessing,
     handleOptionUpdate,
-    survey
+    survey,
   } = useChat();
 
   const handleOption = (option) => {
@@ -67,8 +67,11 @@ function ChatConversation() {
   const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef();
   const splitRef = useRef(null);
-  const tlRef = useRef(null)
+  const tlRef = useRef(null);
+  const tlBtn = useRef(null);
 
+
+  // component mount animation when page loads
   useGSAP(() => {
     const heroSplit = new SplitText(".heroText span", {
       type: "chars,  words",
@@ -96,7 +99,69 @@ function ChatConversation() {
         });
       },
     });
-  });
+
+    gsap.fromTo(".techPills > *", 
+      {
+        opacity: 0,
+        scale: 0,
+        y: 30
+      },
+      {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        duration: 0.5,
+        stagger: 0.1, 
+        ease: "back.out(1.7)", 
+        delay: 3,
+        clearProps: "all" 
+      }
+    );
+
+    tlBtn.current = gsap.timeline({
+      delay: 5,
+    });
+
+    tlBtn.current.set([".btn-text-1", ".btn-text-2"], {
+      opacity: 0,
+    });
+
+    tlBtn.current.fromTo(
+      ".pop-btn",
+      {
+        width: "48px", 
+        borderRadius: "50%", 
+        scale: 0,
+        opacity: 0,
+      },
+      {
+        scale: 1,
+        opacity: 1,
+        duration: 0.8,
+        ease: "elastic.out(1, 0.5)",
+      }
+    );
+
+    tlBtn.current
+      .to(".pop-btn", {
+        width: "12rem", 
+        borderRadius: "1.75rem", 
+        color: "white", 
+        duration: 1.0,
+        ease: "power3.inOut",
+        delay: 1, 
+        clearProps: "all",
+      })
+      .to(
+        [".btn-text-1", ".btn-text-2"],
+        {
+          opacity: 1,
+          duration: 0.6,
+          clearProps: "all",
+        },
+        "<+=0.3"
+      );
+  }, []);
 
   // useGSAP for button rolling animation
 
@@ -104,7 +169,7 @@ function ChatConversation() {
     const split1 = new SplitText(".btn-text-1", { type: "words, chars" });
     const split2 = new SplitText(".btn-text-2", { type: "words, chars" });
 
-     tlRef.current = gsap.timeline({ paused: true });
+    tlRef.current = gsap.timeline({ paused: true });
 
     tlRef.current.fromTo(
       split1.chars,
@@ -127,32 +192,48 @@ function ChatConversation() {
         duration: 0.4,
         y: -20,
         stagger: 0.03,
-      },"<"  
+      },
+      "<"
     );
   }, [isHovered]);
 
   // useGSAP for pushing the hero text, sub text and the pills up when the chat card appears
 
   useGSAP(() => {
-      if(!isProcessing && !survey.isCompleted) return
+    if (!isProcessing && !survey.isCompleted) return;
 
-      gsap.from(".heroText", {
-        opacity:0,
-        duration:1.5,
-        y:100,
-        stagger:0.05,
-        ease:"power3.out"
-      })
+    const tl = gsap.timeline()
 
-      gsap.from(".subtitleText", {
-        y:100,
-        opacity:0,
-        duration:1.5,
-        stagger:0.05,
-        ease:"power3.out",
-        delay:0.5
-      })
-  }, [ survey.isCompleted])
+    tl.to([".heroText", ".subtitleText", ".techPills"], {
+      y:-50,
+      opacity:0,
+      duration:0.8,
+      stagger:0.1,
+      ease:"power3.in",
+      overwrite:true,
+      display:"none"
+    })
+
+    tl.fromTo(".chat-card-container",
+        {
+          y: 60,                // Start lower
+          scale: 0.85,          // Start slightly smaller
+          opacity: 0,
+          filter: "blur(10px)", // The "Premium" blur effect
+        },
+        {
+          y: 0,
+          scale: 1,
+          opacity: 1,
+          filter: "blur(0px)",  // Focus in
+          duration: 1.2,
+          ease: "power4.out",   // Very smooth easing
+          clearProps: "all"     // Clean up afterwards
+        },
+        "-=0.4" // Start overlapping slightly with the text exit
+      );
+
+  }, [survey.isCompleted]);
 
   return (
     <WavyBackground className="p-4">
@@ -172,8 +253,8 @@ function ChatConversation() {
         </p>
       </div>
 
-      {/* 3. Pills - Removed 'relative bottom-10', kept standard flex layout */}
-      <div className="gap-3 flex justify-center items-center mb-5 z-10">
+      {/* pills */}
+      <div className="gap-3 flex justify-center items-center mb-5 z-10 techPills">
         <HoverBorderGradient
           containerClassName="rounded-full"
           as="button"
@@ -199,8 +280,8 @@ function ChatConversation() {
         </HoverBorderGradient>
       </div>
 
-      {isProcessing && survey.isCompleted ?  (
-        <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[490px]  bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+      {isProcessing && survey.isCompleted ? (
+        <Card className="chat-card-container relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[490px]  bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
           <div className="flex h-full flex-col z-10 relative w-full">
             <Conversation className="flex-1 overflow-y-auto overflow-x-hidden">
               <ConversationContent className="p-2 md:p-4 space-y-4">
@@ -303,21 +384,25 @@ function ChatConversation() {
         <div className="flex items-center justify-center">
           <Button
             onClick={() => setIsProcessing(true)}
-            className="overflow-hidden"
+            className="overflow-hidden "
             onMouseEnter={() => tlRef.current?.play()}
             onMouseLeave={() => tlRef.current?.reverse()}
+            containerClassName="pop-btn"
           >
             <div
               ref={containerRef}
               className="relative h-5 overflow-hidden flex flex-col"
             >
               {/* Original Text */}
-              <span className=" btn-text-1" style={{ whiteSpace: 'pre' }}>
+              <span className=" btn-text-1" style={{ whiteSpace: "pre" }}>
                 Get started
               </span>
 
-              {/* Duplicate Text (Waiting below) */}
-              <span className=" absolute top-full left-0 right-0 btn-text-2" style={{ whiteSpace: 'pre' }}>
+              {/* Duplicate Text */}
+              <span
+                className=" absolute top-full left-0 right-0 btn-text-2"
+                style={{ whiteSpace: "pre" }}
+              >
                 Get started
               </span>
             </div>

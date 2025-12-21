@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useRef } from "react";
 import {
   motion,
   useAnimationFrame,
@@ -7,7 +7,6 @@ import {
   useMotionValue,
   useTransform,
 } from "motion/react";
-import { useRef } from "react";
 import { cn } from "@/lib/utils";
 
 export function Button({
@@ -23,7 +22,6 @@ export function Button({
   return (
     <Component
       className={cn(
-        // Added font-semibold for better text weight
         "relative h-12 w-48 overflow-hidden bg-transparent p-[1px] text-lg font-semibold mt-12 bottom-10",
         containerClassName
       )}
@@ -34,13 +32,14 @@ export function Button({
     >
       <div
         className="absolute inset-0"
-        style={{ borderRadius: `calc(${borderRadius} * 0.96)` }}
+        style={{ borderRadius: "inherit" }}
       >
-        <MovingBorder duration={duration} rx="30%" ry="30%">
+        {/* We hardcode rx/ry to {24} (Numbers). 
+            This is exactly half of h-12 (48px). 
+            It CANNOT fail to be round. */}
+        <MovingBorder duration={duration} rx={24} ry={24}>
           <div
             className={cn(
-              // CHANGE 1: Brighter Gradient (#38bdf8 is Sky-400).
-              // Increased opacity to 1.0 for a stronger glow effect.
               "h-20 w-20 bg-[radial-gradient(#38bdf8_40%,transparent_60%)] opacity-[1.2]",
               borderClassName
             )}
@@ -49,13 +48,11 @@ export function Button({
       </div>
       <div
         className={cn(
-          // CHANGE 2: Darker background (bg-slate-950) to make text readable.
-          // Removed transparency (/[0.8]) to block the wavy background lines.
           "relative flex h-full w-full items-center justify-center border border-slate-800 bg-slate-950 text-sm text-white antialiased backdrop-blur-xl cursor-pointer",
           className
         )}
         style={{
-          borderRadius: `calc(${borderRadius} * 0.96)`,
+          borderRadius: "inherit",
         }}
       >
         {children}

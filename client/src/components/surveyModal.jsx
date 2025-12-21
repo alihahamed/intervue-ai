@@ -77,7 +77,7 @@ function SurveyModal() {
 
     tl.to(".modal-content", {
       opacity: 0,
-      duration: 0.3,
+      duration: 0.6,
       ease: "power3.in",
       yPercent:-100
     })
@@ -85,9 +85,9 @@ function SurveyModal() {
       ".banner-col",
       {
         yPercent: 100, 
-        duration: 0.8,
+        duration: 1.2,
         stagger: {
-          each: 0.1,
+          each: 0.4,
           from: "end", 
         },
         ease: "power3.inOut",
