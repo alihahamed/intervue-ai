@@ -52,6 +52,7 @@ function ChatConversation() {
     isProcessing,
     setIsProcessing,
     handleOptionUpdate,
+    survey
   } = useChat();
 
   const handleOption = (option) => {
@@ -195,7 +196,7 @@ function ChatConversation() {
         </HoverBorderGradient>
       </div>
 
-      {isProcessing ? (
+      {isProcessing && survey.isCompleted ?  (
         <Card className="relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[490px]  bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
           <div className="flex h-full flex-col z-10 relative w-full">
             <Conversation className="flex-1 overflow-y-auto overflow-x-hidden">

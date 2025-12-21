@@ -11,6 +11,7 @@ export const ChatProvider = ({ children }) => {
     experience: "No Experience",
     techStack: "React, Nodejs",
     targetRole: "Frontend Developer",
+    isCompleted:false
   });
 
   const addMessage = (sender, text, audioBase64 = null) => {
