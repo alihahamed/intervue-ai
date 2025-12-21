@@ -5,7 +5,7 @@ import {
   ConversationScrollButton,
 } from "@/components/ui/conversation";
 import { useChat } from "../createContext";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { SplitText } from "gsap/SplitText";
@@ -21,8 +21,6 @@ import ChatInput from "./chatInput";
 import { WavyBackground } from "./ui/wavy-background";
 import { HoverBorderGradient } from "./ui/hover-border-gradient";
 import { Button } from "./ui/moving-border";
-
-
 
 const GradeBadge = ({ grade }) => {
   if (grade === null || grade === undefined) return null;
@@ -65,19 +63,92 @@ function ChatConversation() {
 
   gsap.registerPlugin(SplitText);
 
+  const [isHovered, setIsHovered] = useState(false);
+  const containerRef = useRef();
+  const splitRef = useRef(null);
+  const tlRef = useRef(null)
+
   useGSAP(() => {
-    const heroSplit = new SplitText(".heroText span", {type:"chars,  words"});
+    const heroSplit = new SplitText(".heroText span", {
+      type: "chars,  words",
+    });
 
     gsap.from(heroSplit.chars, {
-      opacity:0,
-      duration:1.7,
-      ease:'expo.out',
-      stagger:{ amount: 0.7 },
-      alpha:0,
-      y:30
-      
-    })
+      opacity: 0,
+      duration: 1.5,
+      ease: "expo.out",
+      stagger: 0.08,
+      alpha: 0,
+      y: 30,
+    });
+
+    SplitText.create(".subtitleText", {
+      type: "lines",
+      onSplit(self) {
+        gsap.from(self.lines, {
+          opacity: 0,
+          yPercent: 100,
+          duration: 1.8,
+          ease: "expo.out",
+          stagger: 0.05,
+          delay: 2,
+        });
+      },
+    });
   });
+
+  // useGSAP for button rolling animation
+
+  // useGSAP(
+  //   () => {
+  //     // 1. SETUP: Split the text ONLY ONCE on mount
+  //     // We scope selection to containerRef so we don't accidentally split other things
+
+  //     // Save them to ref so we can animate them later
+  //     splitRef.current = { top: split1.chars, bottom: split2.chars };
+
+  //     // Initial State: Position the bottom text out of view (down)
+  //     gsap.set(split2.chars, { yPercent: 100 });
+
+  //     // Cleanup: Revert the split when component unmounts
+  //     return () => {
+  //       split1.revert();
+  //       split2.revert();
+  //     };
+  //   },
+  //   { scope: containerRef }
+  // );
+
+  useGSAP(() => {
+    const split1 = new SplitText(".btn-text-1", { type: "words, chars" });
+    const split2 = new SplitText(".btn-text-2", { type: "words, chars" });
+
+     tlRef.current = gsap.timeline({ paused: true });
+
+    tlRef.current.fromTo(
+      split1.chars,
+      {
+        y: 0,
+      },
+      {
+        duration: 0.5,
+        y: -20,
+        stagger: 0.04,
+      }
+    );
+
+    tlRef.current.fromTo(
+      split2.chars,
+      {
+        y: 38,
+      },
+      {
+        duration: 0.4,
+        y: -20,
+        stagger: 0.03,
+      },"<"  
+    );
+  }, [isHovered]);
 
   return (
     <WavyBackground className="p-4">
@@ -85,15 +156,13 @@ function ChatConversation() {
       <div className="font-bold text-4xl md:text-5xl lg:text-[68px]  mb-6 text-center tracking-tight z-10">
         <h1 className="heroText">
           <span>Master Your</span>{" "}
-          <span className="text-blue-400">
-            Next Interview.
-          </span>
+          <span className="text-blue-400">Next Interview.</span>
         </h1>
       </div>
 
       {/* 2. Description - Removed 'relative bottom-12', used standard margins */}
       <div className="text-sm md:text-lg text-center text-gray-200 leading-relaxed max-w-2xl mx-auto mb-8 px-4 z-10">
-        <p>
+        <p className="subtitleText">
           An autonomous interview agent that listens, processes, and speaks.
           Built with SLMs for rapid reasoning and realistic speech interaction.
         </p>
@@ -228,7 +297,27 @@ function ChatConversation() {
         </Card>
       ) : (
         <div className="flex items-center justify-center">
-          <Button onClick={() => setIsProcessing(true)}>Get started</Button>
+          <Button
+            onClick={() => setIsProcessing(true)}
+            className="overflow-hidden"
+            onMouseEnter={() => tlRef.current?.play()}
+            onMouseLeave={() => tlRef.current?.reverse()}
+          >
+            <div
+              ref={containerRef}
+              className="relative h-5 overflow-hidden flex flex-col"
+            >
+              {/* Original Text */}
+              <span className=" btn-text-1" style={{ whiteSpace: 'pre' }}>
+                Get started
+              </span>
+
+              {/* Duplicate Text (Waiting below) */}
+              <span className=" absolute top-full left-0 right-0 btn-text-2" style={{ whiteSpace: 'pre' }}>
+                Get started
+              </span>
+            </div>
+          </Button>
         </div>
       )}
     </WavyBackground>
