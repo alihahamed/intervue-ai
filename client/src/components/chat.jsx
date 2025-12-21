@@ -70,7 +70,6 @@ function ChatConversation() {
   const tlRef = useRef(null);
   const tlBtn = useRef(null);
 
-
   // component mount animation when page loads
   useGSAP(() => {
     const heroSplit = new SplitText(".heroText span", {
@@ -100,21 +99,22 @@ function ChatConversation() {
       },
     });
 
-    gsap.fromTo(".techPills > *", 
+    gsap.fromTo(
+      ".techPills > *",
       {
         opacity: 0,
         scale: 0,
-        y: 30
+        y: 30,
       },
       {
         opacity: 1,
         scale: 1,
         y: 0,
         duration: 0.5,
-        stagger: 0.1, 
-        ease: "back.out(1.7)", 
+        stagger: 0.1,
+        ease: "back.out(1.7)",
         delay: 2.7,
-        clearProps: "all" 
+        clearProps: "all",
       }
     );
 
@@ -129,8 +129,8 @@ function ChatConversation() {
     tlBtn.current.fromTo(
       ".pop-btn",
       {
-        width: "48px", 
-        borderRadius: "50%", 
+        width: "48px",
+        borderRadius: "50%",
         scale: 0,
         opacity: 0,
       },
@@ -144,12 +144,12 @@ function ChatConversation() {
 
     tlBtn.current
       .to(".pop-btn", {
-        width: "12rem", 
-        borderRadius: "1.75rem", 
-        color: "white", 
+        width: "12rem",
+        borderRadius: "1.75rem",
+        color: "white",
         duration: 1.0,
         ease: "power3.inOut",
-        delay: 0.5, 
+        delay: 0.5,
         clearProps: "all",
       })
       .to(
@@ -202,39 +202,133 @@ function ChatConversation() {
   useGSAP(() => {
     if (!isProcessing && !survey.isCompleted) return;
 
-    const tl = gsap.timeline()
+    const tl = gsap.timeline();
 
     tl.to([".heroText", ".subtitleText", ".techPills"], {
-      y:-50,
-      opacity:0,
-      duration:0.8,
-      stagger:0.1,
-      ease:"power3.in",
-      overwrite:true,
-      display:"none",
-      
-    })
+      y: -50,
+      opacity: 0,
+      duration: 0.8,
+      stagger: 0.1,
+      ease: "power3.in",
+      overwrite: true,
+      display: "none",
+    });
 
-    tl.fromTo(".chat-card-container",
-        {
-          y: 40,                // Start lower
-          scale: 0.75,          // Start slightly smaller
-          opacity: 0,
-          filter: "blur(10px)", // The "Premium" blur effect
-        },
-        {
-          y: 0,
-          scale: 1,
-          opacity: 1,
-          filter: "blur(0px)",  // Focus in
-          duration: 1.4,
-          ease: "power4.out",   // Very smooth easing
-          clearProps: "all"     // Clean up afterwards
-        },
-        "-=0.4" // Start overlapping slightly with the text exit
+    tl.fromTo(
+      ".chat-card-container",
+      {
+        y: 40, // Start lower
+        scale: 0.75, // Start slightly smaller
+        opacity: 0,
+        filter: "blur(10px)", // The "Premium" blur effect
+      },
+      {
+        y: 0,
+        scale: 1,
+        opacity: 1,
+        filter: "blur(0px)", // Focus in
+        duration: 1.4,
+        ease: "power4.out", // Very smooth easing
+        clearProps: "all", // Clean up afterwards
+      },
+      "-=0.4" // Start overlapping slightly with the text exit
+    );
+  }, [survey.isCompleted]);
+
+  // voice call refs and states
+
+  const [connectionStatus, setConnectionStatus] = useState("idle");
+  const socketRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const [orbState, setOrbState] = useState("listening");
+
+  const activateVoiceAgent = async () => {
+    setConnectionStatus("connecting");
+
+    const [instructionsResponse, tokenResponse] = await Promise.all([
+      fetch("http://localhost:3021/api/prepare-voice-context", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ survey }),
+      }),
+      fetch("http://localhost:3021/api/token-key"),
+    ]);
+
+    const { instructions } = await instructionsResponse.json();
+    const token = await tokenResponse.json();
+
+    console.log("instructions", instructions);
+    console.log("token", token);
+
+    // open the phone link or communication link (by initialising websocket)
+    socketRef.current = new WebSocket("wss://agent.deepgram.com/agent", [
+      "token",
+      token,
+    ]);
+
+    // when the connection is open run the below code
+    // configure the ai (set model, give instructions, set audio type)
+    socketRef.current.onopen = async () => {
+      setConnectionStatus("active");
+
+      
+      socketRef.current.send(
+        JSON.stringify({
+          type: "Settings",
+          audio: {
+            input: { encoding: "webm", sample_rate: 48000 },
+            output: {
+              encoding: "linear16",
+              sample_rate: 24000,
+              container: "none",
+            },
+          },
+          agent: {
+            listen: { model: "nova-2" },
+            think: {
+              provider: { type: "open_ai" },
+              model: "gpt-4o-mini",
+              instructions,
+            },
+            speak: { model: "aura-asteria-en" },
+          },
+        })
       );
 
-  }, [survey.isCompleted]);
+      // acts as the ear of our voice agent
+      const stream = navigator.mediaDevices.getUserMedia({ audio: true }); // set the audio permission to be true
+      mediaRecorderRef.current = new MediaRecorder(stream, {
+        mimeType: "audio/webm",
+      });
+      mediaRecorderRef.current.addEventListener("dataavailable", (event) => {
+        if (event.data.size > 0 && socketRef.current?.readyState === 1) {
+          socketRef.current.send(event.data); // send the audio that is collected and send it to the websocket tunnel every 250 milliseconds which in turn acts like a call
+        }
+      });
+      mediaRecorderRef.current.start(250); // Send chunks every 250ms
+    };
+    // acts as the mouth of the voice agent
+    socketRef.current.onmessage = async (message) => {
+      if (message.data instanceof Blob) { // if the message is a blob which is binary data then run the playAudio function which plays the audio  
+        playAudio(message.data);
+        console.log("blob text", message.data)
+        setOrbState("talking");
+      } else { // if the message is text then check for transcripts      
+        const event = JSON.parse(message.data);
+        console.log("event text", event)
+
+        if(event.type === "ConversationText") {
+          addMessage(
+                 event.role === "user" ? "user" : "assistant", 
+                 event.content
+               );
+        }
+      }
+
+      
+    };
+  };
 
   return (
     <WavyBackground className="p-4">
