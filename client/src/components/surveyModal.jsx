@@ -68,16 +68,17 @@ function SurveyModal() {
   }, [isProcessing]);
 
   const handleExit = () => {
+    setSurvey({ ...survey, isCompleted: true });
     const tl = gsap.timeline({
       onComplete: () => {
-        setSurvey({ ...survey, isCompleted: true }); // if isCompleted is true, the chat card will appear and the modal will fade out
+         // if isCompleted is true, the chat card will appear and the modal will fade out
         setCurrentStep((prev) => prev + 1);
       },
     });
 
     tl.to(".modal-content", {
       opacity: 0,
-      duration: 0.6,
+      duration: 0.3,
       ease: "power3.in",
       yPercent:-100
     })
@@ -85,9 +86,9 @@ function SurveyModal() {
       ".banner-col",
       {
         yPercent: 100, 
-        duration: 1.2,
+        duration: 0.7,
         stagger: {
-          each: 0.4,
+          each: 0.2,
           from: "end", 
         },
         ease: "power3.inOut",

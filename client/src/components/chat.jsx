@@ -113,13 +113,13 @@ function ChatConversation() {
         duration: 0.5,
         stagger: 0.1, 
         ease: "back.out(1.7)", 
-        delay: 3,
+        delay: 2.7,
         clearProps: "all" 
       }
     );
 
     tlBtn.current = gsap.timeline({
-      delay: 5,
+      delay: 3.6,
     });
 
     tlBtn.current.set([".btn-text-1", ".btn-text-2"], {
@@ -149,7 +149,7 @@ function ChatConversation() {
         color: "white", 
         duration: 1.0,
         ease: "power3.inOut",
-        delay: 1, 
+        delay: 0.5, 
         clearProps: "all",
       })
       .to(
@@ -211,13 +211,14 @@ function ChatConversation() {
       stagger:0.1,
       ease:"power3.in",
       overwrite:true,
-      display:"none"
+      display:"none",
+      
     })
 
     tl.fromTo(".chat-card-container",
         {
-          y: 60,                // Start lower
-          scale: 0.85,          // Start slightly smaller
+          y: 40,                // Start lower
+          scale: 0.75,          // Start slightly smaller
           opacity: 0,
           filter: "blur(10px)", // The "Premium" blur effect
         },
@@ -226,7 +227,7 @@ function ChatConversation() {
           scale: 1,
           opacity: 1,
           filter: "blur(0px)",  // Focus in
-          duration: 1.2,
+          duration: 1.4,
           ease: "power4.out",   // Very smooth easing
           clearProps: "all"     // Clean up afterwards
         },
@@ -281,7 +282,7 @@ function ChatConversation() {
       </div>
 
       {isProcessing && survey.isCompleted ? (
-        <Card className="chat-card-container relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[450px] xl:h-[500px] 2xl:h-[490px]  bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+        <Card className="chat-card-container relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[590px] xl:h-[550px] 2xl:h-[570px]  bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
           <div className="flex h-full flex-col z-10 relative w-full">
             <Conversation className="flex-1 overflow-y-auto overflow-x-hidden">
               <ConversationContent className="p-2 md:p-4 space-y-4">
