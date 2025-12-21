@@ -100,26 +100,6 @@ function ChatConversation() {
 
   // useGSAP for button rolling animation
 
-  // useGSAP(
-  //   () => {
-  //     // 1. SETUP: Split the text ONLY ONCE on mount
-  //     // We scope selection to containerRef so we don't accidentally split other things
-
-  //     // Save them to ref so we can animate them later
-  //     splitRef.current = { top: split1.chars, bottom: split2.chars };
-
-  //     // Initial State: Position the bottom text out of view (down)
-  //     gsap.set(split2.chars, { yPercent: 100 });
-
-  //     // Cleanup: Revert the split when component unmounts
-  //     return () => {
-  //       split1.revert();
-  //       split2.revert();
-  //     };
-  //   },
-  //   { scope: containerRef }
-  // );
-
   useGSAP(() => {
     const split1 = new SplitText(".btn-text-1", { type: "words, chars" });
     const split2 = new SplitText(".btn-text-2", { type: "words, chars" });
@@ -150,6 +130,29 @@ function ChatConversation() {
       },"<"  
     );
   }, [isHovered]);
+
+  // useGSAP for pushing the hero text, sub text and the pills up when the chat card appears
+
+  useGSAP(() => {
+      if(!isProcessing && !survey.isCompleted) return
+
+      gsap.from(".heroText", {
+        opacity:0,
+        duration:1.5,
+        y:100,
+        stagger:0.05,
+        ease:"power3.out"
+      })
+
+      gsap.from(".subtitleText", {
+        y:100,
+        opacity:0,
+        duration:1.5,
+        stagger:0.05,
+        ease:"power3.out",
+        delay:0.5
+      })
+  }, [ survey.isCompleted])
 
   return (
     <WavyBackground className="p-4">

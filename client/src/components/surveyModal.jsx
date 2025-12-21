@@ -58,9 +58,10 @@ function SurveyModal() {
       ".modal-content",
       {
         opacity: 0,
-        y: 20,
+        yPercent: 100,
         duration: 0.6,
-        ease: "power2.out",
+        ease: "power3.out",
+        
       },
       "-=0.4"
     );
@@ -78,6 +79,7 @@ function SurveyModal() {
       opacity: 0,
       duration: 0.3,
       ease: "power3.in",
+      yPercent:-100
     })
     .to(
       ".banner-col",
@@ -264,9 +266,9 @@ function SurveyModal() {
               <div className="absolute inset-0 opacity-20"></div>
 
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-full h-full flex items-center justify-center text-zinc-800">
+                {/* <div className="w-full h-full flex items-center justify-center text-zinc-800">
                   <SplineModel />
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
