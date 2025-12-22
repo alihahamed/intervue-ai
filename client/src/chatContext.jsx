@@ -36,6 +36,20 @@ export const ChatProvider = ({ children }) => {
   const deleteMessage = () => {
     setMessage([])
   }
+  
+  const resetInterview = () => {
+    const defaultState = {
+      userName: "",
+      experience: "",
+      techStack: "",
+      targetRole: "",
+      isCompleted: false
+    }
+    setSurvey(defaultState)
+    setMessage([])
+    setIsProcessing(false)
+    localStorage.removeItem("surveyData")
+  }
 
   const handleOptionUpdate = (option) => {
     setMessage((prev) => {
@@ -65,7 +79,8 @@ export const ChatProvider = ({ children }) => {
         survey,
         setSurvey,
         handleOptionUpdate,
-        deleteMessage
+        deleteMessage,
+        resetInterview
       }}
     >
       {children}

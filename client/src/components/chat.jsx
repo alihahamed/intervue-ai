@@ -5,7 +5,8 @@ import {
   ConversationScrollButton,
 } from "@/components/ui/conversation";
 import { useChat } from "../createContext";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo} from "react";
+import React from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { SplitText } from "gsap/SplitText";
@@ -23,6 +24,25 @@ import { HoverBorderGradient } from "./ui/hover-border-gradient";
 import { Button } from "./ui/moving-border";
 import FloatingLines from "./ui/FloatingLines";
 import { Mic, MicOff } from "lucide-react";
+
+const InterviewBackground = React.memo(() => {
+  return (
+    <div className="absolute inset-0 z-0">
+      <FloatingLines
+        enabledWaves={["top", "middle", "bottom"]}
+        lineCount={[10, 15, 20]}
+        lineDistance={[8, 6, 4]}
+        bendRadius={5.0}
+        bendStrength={-0.5}
+        interactive={true}
+        parallax={true}
+      />
+    </div>
+  );
+});
+
+// Give it a display name for debugging
+InterviewBackground.displayName = "InterviewBackground";
 
 function ChatConversation() {
   const {
@@ -311,7 +331,7 @@ function ChatConversation() {
     try {
       setConnectionStatus("connecting");
       setCallEnd(false);
-      console.log("🚀 Starting Agent Connection...");
+      console.log(" Starting Agent Connection...");
 
       // A. Fetch Config
       const [instructionsResponse, tokenResponse] = await Promise.all([
@@ -452,30 +472,17 @@ function ChatConversation() {
   };
 
   // show the interview interface if survey is completed
+
+  
+
   if (survey.isCompleted) {
     return (
       // 1. MAIN CONTAINER: Full Screen & Relative
-      <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center">
-        {/* 2. BACKGROUND LAYER (Absolute & Z-0) */}
-        {/* The lines sit behind everything else */}
-        <div className="absolute inset-0 z-0">
-          <FloatingLines
-            enabledWaves={["top", "middle", "bottom"]}
-            // Array - specify line count per wave; Number - same count for all waves
-            lineCount={[10, 15, 20]}
-            // Array - specify line distance per wave; Number - same distance for all waves
-            lineDistance={[8, 6, 4]}
-            bendRadius={5.0}
-            bendStrength={-0.5}
-            interactive={true}
-            parallax={true}
-          />
-        </div>
-
-        {/* 3. CONTENT LAYER (Relative & Z-10) */}
-        {/* The Card sits on top. Note: We removed FloatingLines as the parent */}
-        <div className="relative z-10 w-full flex items-center justify-center px-4">
-          <Card className="chat-card-container w-full max-w-4xl h-[620px] md:h-[590px] xl:h-[550px] 2xl:h-[650px] bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+      <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center">    
+        <InterviewBackground />
+        <div className="relative z-10 w-full flex items-center justify-center px-4 pointer-events-none">
+          
+          <Card className="chat-card-container pointer-events-auto w-full max-w-5xl h-[620px] md:h-[630px] xl:h-[650px] 2xl:h-[650px] bg-[#09090b]/90 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
             <div className="flex h-full flex-col z-10 relative w-full">
               <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
                 <ConversationContent className="p-2 md:p-4 space-y-4">
@@ -559,9 +566,9 @@ function ChatConversation() {
                       )}
                     </div>
                     <span className="text-zinc-400 text-sm font-medium">
-                      {connectionStatus === "active"
-                        ? "Listening..."
-                        : "Connecting..."}
+                      {connectionStatus === "idle"
+                        ? "Idle" 
+                        : connectionStatus === "active" ? "Listening..." : "Connecting..."}
                     </span>
                   </div>
 
@@ -587,14 +594,14 @@ function ChatConversation() {
                     {!callEnd ? (
                       <button
                         onClick={endCall}
-                        className="px-5 py-2.5 bg-red-500 text-white text-sm font-medium rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg shadow-red-500/25"
+                        className="px-5 py-2.5 bg-red-500 text-black text-sm font-medium rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg shadow-red-500/25"
                       >
                         End Call
                       </button>
                     ) : (
                       <button
                         onClick={startAgent}
-                        className="px-5 py-2.5 bg-emerald-500 text-white text-sm font-medium rounded-full hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
+                        className="px-5 py-2.5 bg-emerald-500 text-black text-sm font-medium rounded-full hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
                       >
                         Start Call
                       </button>
