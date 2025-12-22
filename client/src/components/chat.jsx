@@ -21,6 +21,7 @@ import ChatInput from "./chatInput";
 import { WavyBackground } from "./ui/wavy-background";
 import { HoverBorderGradient } from "./ui/hover-border-gradient";
 import { Button } from "./ui/moving-border";
+import { Mic, MicOff } from "lucide-react";
 
 const GradeBadge = ({ grade }) => {
   if (grade === null || grade === undefined) return null;
@@ -53,7 +54,7 @@ function ChatConversation() {
     setIsProcessing,
     handleOptionUpdate,
     survey,
-    deleteMessage
+    deleteMessage,
   } = useChat();
 
   const handleOption = (option) => {
@@ -240,12 +241,13 @@ function ChatConversation() {
 
   const [connectionStatus, setConnectionStatus] = useState("idle");
   const [orbState, setOrbState] = useState("listening");
-  const [callEnd, setCallEnd] = useState(false)
+  const [callEnd, setCallEnd] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
   const socketRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioContextRef = useRef(null);
-  const processorRef = useRef(null)
-  const nextStartTimeRef = useRef(null)
+  const processorRef = useRef(null);
+  const nextStartTimeRef = useRef(null);
 
   // FIX: Track messages in a Ref so we can read them without re-triggering effects
   const messagesRef = useRef(message);
@@ -256,7 +258,8 @@ function ChatConversation() {
   // --- 1. HELPER: PLAY AUDIO ---
   const playAudio = async (blob) => {
     if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({
+      audioContextRef.current = new (window.AudioContext ||
+        window.webkitAudioContext)({
         latencyHint: "interactive",
       });
     }
@@ -289,178 +292,191 @@ function ChatConversation() {
     if (nextStartTimeRef.current < currentTime) {
       nextStartTimeRef.current = currentTime;
     }
-    
+
     source.start(nextStartTimeRef.current);
-    
+
     // Advance the pointer
     nextStartTimeRef.current += buffer.duration;
-    
+
     source.onended = () => {
-        // Optional: logic when a specific chunk finishes
+      // Optional: logic when a specific chunk finishes
     };
   };
 
-  // --- 2. HELPER: END CALL ---
+  // resetting everything back to default so that we can start a new call
   const endCall = useCallback(() => {
-    socketRef.current?.close();
-    mediaRecorderRef.current?.stop();
+    if (socketRef.current) {
+      socketRef.current?.close();
+      socketRef.current = null;
+    }
+
+    if (mediaRecorderRef.current !== "inactive") {
+      mediaRecorderRef.current?.stop();
+      mediaRecorderRef.current = null;
+    }
+
+    if (processorRef.current) {
+      processorRef.current.disconnect();
+      processorRef.current.onaudioprocess = null;
+      processorRef.current = null;
+    }
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
     setConnectionStatus("idle");
     setOrbState("listening");
 
-    deleteMessage()
-  }, [setIsProcessing, deleteMessage]);
+    deleteMessage();
+    setCallEnd(true);
+  }, [deleteMessage]);
 
- useEffect(() => {
-    if (!isProcessing || !survey.isCompleted || connectionStatus !== "idle") return;
+  let isMounted = true;
 
-    let isMounted = true;
+  const startAgent = async () => {
+    try {
+      setConnectionStatus("connecting");
+      setCallEnd(false);
+      console.log("🚀 Starting Agent Connection...");
 
-    const startAgent = async () => {
-      try {
-        setConnectionStatus("connecting");
-        console.log("🚀 Starting Agent Connection...");
+      // A. Fetch Config
+      const [instructionsResponse, tokenResponse] = await Promise.all([
+        fetch("http://localhost:3021/api/get-voice-context", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ surveyData: survey }),
+        }),
+        fetch("http://localhost:3021/api/get-agent-token"),
+      ]);
 
-        // A. Fetch Config
-        const [instructionsResponse, tokenResponse] = await Promise.all([
-          fetch("http://localhost:3021/api/get-voice-context", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ surveyData: survey }),
-          }),
-          fetch("http://localhost:3021/api/get-agent-token"),
-        ]);
+      const { instructions } = await instructionsResponse.json();
+      const { key } = await tokenResponse.json();
 
-        const { instructions } = await instructionsResponse.json();
-        const { key } = await tokenResponse.json();
+      // B. Prepare History
+      const historyMessages = messagesRef.current
+        .filter((m) => m.sender === "user" || m.sender === "assistant")
+        .map((m) => ({
+          type: "History",
+          role: m.sender === "user" ? "user" : "assistant",
+          content: typeof m.text === "string" ? m.text : JSON.stringify(m.text),
+        }));
 
-        // B. Prepare History
-        const historyMessages = messagesRef.current
-          .filter((m) => m.sender === "user" || m.sender === "assistant")
-          .map((m) => ({
-            type: "History",
-            role: m.sender === "user" ? "user" : "assistant",
-            content: typeof m.text === "string" ? m.text : JSON.stringify(m.text),
-          }));
+      if (!isMounted) return;
 
+      // C. Connect WebSocket
+      socketRef.current = new WebSocket(
+        "wss://agent.deepgram.com/v1/agent/converse",
+        ["bearer", key]
+      );
+
+      socketRef.current.onerror = (error) =>
+        console.error("❌ WebSocket Error:", error);
+      socketRef.current.onclose = (event) => {
+        console.log(`🔌 Closed: ${event.code} - ${event.reason}`);
+        if (isMounted) setConnectionStatus("idle");
+      };
+
+      socketRef.current.onopen = async () => {
         if (!isMounted) return;
+        console.log("✅ WebSocket Open!");
+        setConnectionStatus("active");
 
-        // C. Connect WebSocket
-        socketRef.current = new WebSocket(
-          "wss://agent.deepgram.com/v1/agent/converse",
-          ["bearer", key]
+        // 1. Get Mic Stream FIRST to know the Sample Rate
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+
+        if (!audioContextRef.current) {
+          audioContextRef.current = new (window.AudioContext ||
+            window.webkitAudioContext)();
+        }
+        const sampleRate = audioContextRef.current.sampleRate;
+
+        // 2. Send Settings with LINEAR16 and Dynamic Sample Rate
+        const settings = {
+          type: "Settings",
+          audio: {
+            input: {
+              encoding: "linear16", // ✅ THE FIX: Raw PCM Audio
+              sample_rate: sampleRate, // ✅ Must match the browser's mic
+            },
+            output: {
+              encoding: "linear16",
+              sample_rate: 24000,
+              container: "none",
+            },
+          },
+          agent: {
+            listen: { provider: { type: "deepgram", model: "nova-2" } },
+            think: {
+              provider: { type: "open_ai", model: "gpt-4o-mini" },
+              prompt: instructions,
+            },
+            speak: {
+              provider: { type: "deepgram", model: "aura-2-thalia-en" },
+            },
+            context: { messages: historyMessages },
+          },
+        };
+        socketRef.current.send(JSON.stringify(settings));
+
+        // 3. Setup Audio Processing (Raw PCM)
+        const source = audioContextRef.current.createMediaStreamSource(stream);
+        // Buffer size 4096 = ~85ms latency @ 48kHz
+        const processor = audioContextRef.current.createScriptProcessor(
+          4096,
+          1,
+          1
         );
+        processorRef.current = processor; // Save ref to stop later
 
-        socketRef.current.onerror = (error) => console.error("❌ WebSocket Error:", error);
-        socketRef.current.onclose = (event) => {
-             console.log(`🔌 Closed: ${event.code} - ${event.reason}`);
-             if (isMounted) setConnectionStatus("idle");
-        };
+        source.connect(processor);
+        processor.connect(audioContextRef.current.destination);
 
-        socketRef.current.onopen = async () => {
-          if (!isMounted) return;
-          console.log("✅ WebSocket Open!");
-          setConnectionStatus("active");
+        processor.onaudioprocess = (e) => {
+          if (socketRef.current?.readyState === 1) {
+            const inputData = e.inputBuffer.getChannelData(0);
 
-          // 1. Get Mic Stream FIRST to know the Sample Rate
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          
-          if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-          }
-          const sampleRate = audioContextRef.current.sampleRate;
-
-          // 2. Send Settings with LINEAR16 and Dynamic Sample Rate
-          const settings = {
-            type: "Settings",
-            audio: {
-              input: { 
-                  encoding: "linear16", // ✅ THE FIX: Raw PCM Audio
-                  sample_rate: sampleRate // ✅ Must match the browser's mic
-              },
-              output: {
-                encoding: "linear16",
-                sample_rate: 24000,
-                container: "none",
-              },
-            },
-            agent: {
-              listen: { provider: { type: "deepgram", model: "nova-2" } },
-              think: {
-                provider: { type: "open_ai", model: "gpt-4o-mini" },
-                prompt: instructions,
-              },
-              speak: { provider: { type: "deepgram", model: "aura-2-thalia-en" } },
-              context: { messages: historyMessages },
-            },
-          };
-          socketRef.current.send(JSON.stringify(settings));
-
-          // 3. Setup Audio Processing (Raw PCM)
-          const source = audioContextRef.current.createMediaStreamSource(stream);
-          // Buffer size 4096 = ~85ms latency @ 48kHz
-          const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1);
-          processorRef.current = processor; // Save ref to stop later
-
-          source.connect(processor);
-          processor.connect(audioContextRef.current.destination);
-
-          processor.onaudioprocess = (e) => {
-            if (socketRef.current?.readyState === 1) {
-                const inputData = e.inputBuffer.getChannelData(0);
-                
-                // 🛠️ CONVERT FLOAT32 (Browser) -> INT16 (Deepgram)
-                const buffer = new ArrayBuffer(inputData.length * 2);
-                const view = new DataView(buffer);
-                for (let i = 0; i < inputData.length; i++) {
-                    const s = Math.max(-1, Math.min(1, inputData[i]));
-                    // Convert range [-1.0, 1.0] to [-32768, 32767]
-                    view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-                }
-                
-                socketRef.current.send(buffer);
+            // 🛠️ CONVERT FLOAT32 (Browser) -> INT16 (Deepgram)
+            const buffer = new ArrayBuffer(inputData.length * 2);
+            const view = new DataView(buffer);
+            for (let i = 0; i < inputData.length; i++) {
+              const s = Math.max(-1, Math.min(1, inputData[i]));
+              // Convert range [-1.0, 1.0] to [-32768, 32767]
+              view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
             }
-          };
-        };
 
-        // F. Handle Messages
-        socketRef.current.onmessage = async (message) => {
-          if (message.data instanceof Blob) {
-            playAudio(message.data);
-            setOrbState("talking");
-            // console.log("blob data", message.data)
-          } else {
-            const event = JSON.parse(message.data);
-            if(event.type === "Error") console.error("DEEPGRAM ERROR:", event);
-            
-            if (event.type === "ConversationText") {
-              addMessage(event.role === "user" ? "user" : "assistant", event.content);
-              console.log("text daata", event.content)
-              
-            }
-            if (event.type === "UserStartedSpeaking") setOrbState("listening");
+            socketRef.current.send(buffer);
           }
         };
+      };
 
-      } catch (error) {
-        console.error("❌ Setup Error:", error);
-        if (isMounted) setConnectionStatus("error");
-      }
-    };
+      // F. Handle Messages
+      socketRef.current.onmessage = async (message) => {
+        if (message.data instanceof Blob) {
+          playAudio(message.data);
+          setOrbState("talking");
+          // console.log("blob data", message.data)
+        } else {
+          const event = JSON.parse(message.data);
+          if (event.type === "Error") console.error("DEEPGRAM ERROR:", event);
 
-    startAgent();
-
-    return () => {
-      isMounted = false;
-      socketRef.current?.close();
-      // Stop the processor and audio context
-      if (processorRef.current) {
-        processorRef.current.disconnect();
-        processorRef.current = null;
-      }
-      // Don't close AudioContext immediately if you want to play response audio, 
-      // but usually good practice to suspend it or disconnect sources.
-    };
-  }, [isProcessing, survey.isCompleted]);
+          if (event.type === "ConversationText") {
+            addMessage(
+              event.role === "user" ? "user" : "assistant",
+              event.content
+            );
+            console.log("text daata", event.content);
+          }
+          if (event.type === "UserStartedSpeaking") setOrbState("listening");
+        }
+      };
+    } catch (error) {
+      console.error("❌ Setup Error:", error);
+      if (isMounted) setConnectionStatus("error");
+    }
+  };
 
   return (
     <WavyBackground className="p-4">
@@ -508,122 +524,162 @@ function ChatConversation() {
       </div>
 
       {isProcessing && survey.isCompleted ? (
-        <Card className="chat-card-container relative mx-auto items-center justify-center w-[90%] md:w-full max-w-3xl h-[620px] md:h-[590px] xl:h-[550px] 2xl:h-[570px]  bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
-          <div className="flex h-full flex-col z-10 relative w-full">
-            <Conversation className="flex-1 overflow-y-auto overflow-x-hidden">
-              <ConversationContent className="p-2 md:p-4 space-y-4">
-                {message.length === 0 ? (
-                  <ConversationEmptyState
-                    icon={<Orb className="size-12" agentState="listening" />}
-                    title="No messages yet"
-                    description="Start a conversation to see messages here"
-                  />
-                ) : (
-                  message.map((msg, index) => {
-                    if (msg.sender === "chosenOption") return null;
-                    const isUser = msg.sender === "user";
-                    const isOptions = msg.sender === "chosenOption";
-                    const textContent = isUser
-                      ? msg.text
-                      : msg.text;
-                    const grade = !isUser ? msg.text.grade : undefined;
-                    const options =
-                      !isUser && !isOptions && msg.text.options
-                        ? msg.text.options.map((opt) => (
-                            <button
-                              // w-fit: only as wide as the text
-                              // bg-transparent/10: subtle background
-                              // border-white/20: nice visible border
-                              className="w-fit text-left bg-white/5 border border-white/20 text-white px-3 py-1.5 rounded-full text-xs hover:bg-white/20 transition-colors"
-                              onClick={() => handleOption(opt)}
-                              key={opt}
-                            >
-                              {opt}
-                            </button>
-                          ))
-                        : null;
+        <Card className="chat-card-container relative mx-auto items-center justify-center w-[90%] md:w-full max-w-4xl h-[620px] md:h-[590px] xl:h-[550px] 2xl:h-[650px] bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+        {/* ✅ MAIN FLEX CONTAINER: Takes full height */}
+        <div className="flex h-full flex-col z-10 relative w-full">
+          
+          {/* ✅ 1. CONVERSATION AREA (Flex-1) */}
+          {/* This takes up all available space ABOVE the controls */}
+          <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
+            <ConversationContent className="p-2 md:p-4 space-y-4">
+              {message.length === 0 ? (
+                <ConversationEmptyState
+                  icon={<Orb className="size-25" agentState="listening" />}
+                  title="Are You Ready?"
+                  description="Start the Call to see the messages here"
+                />
+              ) : (
+                message.map((msg, index) => {
+                  if (msg.sender === "chosenOption") return null;
+                  const isUser = msg.sender === "user";
+                  const isOptions = msg.sender === "chosenOption";
+                  const textContent = isUser ? msg.text : msg.text;
+                  const grade = !isUser ? msg.text.grade : undefined;
+                  const options =
+                    !isUser && !isOptions && msg.text.options
+                      ? msg.text.options.map((opt) => (
+                          <button
+                            className="w-fit text-left bg-white/5 border border-white/20 text-white px-3 py-1.5 rounded-full text-xs hover:bg-white/20 transition-colors"
+                            onClick={() => handleOption(opt)}
+                            key={opt}
+                          >
+                            {opt}
+                          </button>
+                        ))
+                      : null;
 
-                    return (
-                      <Message
-                        key={msg.id || index}
-                        from={isUser ? "user" : "assistant"}
-                        className={`flex w-full gap-2 md:gap-3 items-start py-1 md:py-2 ${
-                          isUser ? "justify-end" : "justify-start"
-                        }`}
+                  return (
+                    <Message
+                      key={msg.id || index}
+                      from={isUser ? "user" : "assistant"}
+                      className={`flex w-full gap-2 md:gap-3 items-start py-1 md:py-2 ${
+                        isUser ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      {/* AVATAR */}
+                      {!isUser && (
+                        <div className="ring-border size-6 md:size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
+                          <Orb className="h-full w-full" agentState="talking" />
+                        </div>
+                      )}
+
+                      {/* BUBBLE CONTENT */}
+                      <MessageContent
+                        className={cn(
+                          "relative flex flex-col gap-3 rounded-2xl px-4 py-3 text-sm shadow-sm",
+                          "w-fit max-w-[90%] md:max-w-[85%] whitespace-pre-wrap break-words",
+                          isUser
+                            ? "bg-white text-black rounded-br-none ml-auto"
+                            : "bg-[#27272a] text-white rounded-tl-none mr-auto overflow-visible"
+                        )}
                       >
-                        {/* AVATAR (Unchanged) */}
-                        {!isUser && (
-                          <div className="ring-border size-6 md:size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
-                            <Orb
-                              className="h-full w-full"
-                              agentState="talking"
-                            />
-                          </div>
+                        {!isUser && grade !== undefined && (
+                          <GradeBadge grade={grade} />
                         )}
 
-                        {/* BUBBLE CONTENT */}
-                        <MessageContent
-                          className={cn(
-                            // Added 'flex flex-col gap-3' to space out text and buttons
-                            "relative flex flex-col gap-3 rounded-2xl px-4 py-3 text-sm shadow-sm",
-                            "w-fit max-w-[90%] md:max-w-[85%] whitespace-pre-wrap break-words",
-                            isUser
-                              ? "bg-white text-black rounded-br-none ml-auto"
-                              : "bg-[#27272a] text-white rounded-tl-none mr-auto overflow-visible"
+                        {/* TEXT */}
+                        <div>
+                          {!isUser ? (
+                            <TextGenerateEffect words={textContent} />
+                          ) : (
+                            textContent
                           )}
-                        >
-                          {!isUser && grade !== undefined && (
-                            <GradeBadge grade={grade} />
-                          )}
+                        </div>
 
-                          {/* TEXT */}
-                          <div>
-                            {!isUser ? (
-                              <TextGenerateEffect words={textContent} />
-                            ) : (
-                              textContent
-                            )}
+                        {/* OPTIONS */}
+                        {options && (
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {options}
                           </div>
+                        )}
+                      </MessageContent>
+                    </Message>
+                  );
+                })
+              )}
+            </ConversationContent>
+            {/* The scroll button will now sit naturally at the bottom of this flex area */}
+            <ConversationScrollButton />
+          </Conversation>
 
-                          {/* OPTIONS - RENDERED INSIDE */}
-                          {options && (
-                            <div className="flex flex-wrap gap-2 mt-1">
-                              {options}
-                            </div>
-                          )}
-                        </MessageContent>
-                      </Message>
-                    );
-                  })
-                )}
-              </ConversationContent>
-              <ConversationScrollButton />
-            </Conversation>
-
-            <div className="p-4 border-t border-white/10 bg-black/40 flex justify-between items-center">
+          {/* ✅ 2. DEDICATED CONTROLS FOOTER */}
+          {/* Removed 'absolute', added 'p-4' and 'z-20'. It now sits strictly below the chat. */}
+          <div className="w-full flex justify-center p-4 bg-[#09090b]/50 backdrop-blur-md border-t border-white/5 z-20">
+            <div className="flex items-center justify-between gap-4 px-5 py-3 bg-zinc-900/80 border border-white/10 rounded-full shadow-2xl w-full max-w-md">
+              
+              {/* Status Indicator */}
               <div className="flex items-center gap-3">
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    connectionStatus === "active"
-                      ? "bg-green-500 animate-pulse"
-                      : "bg-yellow-500"
-                  }`}
-                ></div>
-                <span className="text-gray-400 text-sm">
+                <div className="relative">
+                  <div
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      connectionStatus === "active"
+                        ? "bg-emerald-400"
+                        : "bg-amber-400"
+                    }`}
+                  />
+                  {connectionStatus === "active" && (
+                    <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping opacity-75" />
+                  )}
+                </div>
+                <span className="text-zinc-400 text-sm font-medium">
                   {connectionStatus === "active"
                     ? "Listening..."
                     : "Connecting..."}
                 </span>
               </div>
-              <button
-                onClick={endCall}
-                className="px-6 py-2 bg-red-500/10 border border-red-500/50 text-red-500 text-xs rounded-full hover:bg-red-500/20 transition"
-              >
-                End Call
-              </button>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                {/* Mute Button */}
+                <button
+                  disabled={callEnd}
+                  className={`p-2.5 rounded-full transition-all duration-200 ${
+                    callEnd
+                      ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                      : isMuted
+                      ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                  }`}
+                >
+                  {isMuted ? (
+                    <MicOff className="w-5 h-5" />
+                  ) : (
+                    <Mic className="w-5 h-5" />
+                  )}
+                </button>
+
+                {/* Start/End Call Button */}
+                {!callEnd ? (
+                  <button
+                    onClick={endCall}
+                    className="px-5 py-2.5 bg-red-500 text-white text-sm font-medium rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg shadow-red-500/25"
+                  >
+                    End Call
+                  </button>
+                ) : (
+                  <button
+                    onClick={startAgent}
+                    className="px-5 py-2.5 bg-emerald-500 text-white text-sm font-medium rounded-full hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
+                  >
+                    Start Call
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </Card>
+          
+        </div>
+      </Card>
       ) : (
         <div className="flex items-center justify-center">
           <Button

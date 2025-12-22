@@ -10,7 +10,7 @@ export const Message = ({ className, from, ...props }) => (
   <div
     data-role={from}
     className={cn(
-      "group flex w-full items-start gap-3 py-2",
+      "group flex w-full items-start gap-3 ",
       // Align User to right, Assistant to left
       from === "user" ? "justify-end" : "justify-start",
       className
