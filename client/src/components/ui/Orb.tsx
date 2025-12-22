@@ -24,7 +24,7 @@ type OrbProps = {
 }
 
 export function Orb({
-  colors = ["#A855F7", "#EC4899"],
+  colors = ["#E5E7EB", "#9CA3AF"],
   colorsRef,
   resizeDebounce = 100,
   seed,
