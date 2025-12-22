@@ -65,13 +65,12 @@ function SurveyModal() {
       },
       "-=0.4"
     );
-  }, [isProcessing]);
+  }, [isProcessing]); // when is processing is true this animation runs
 
   const handleExit = () => {
-    setSurvey({ ...survey, isCompleted: true });
+    setSurvey({ ...survey, isCompleted: true }); // if isCompleted is true, the chat card will appear and the modal will fade out
     const tl = gsap.timeline({
       onComplete: () => {
-         // if isCompleted is true, the chat card will appear and the modal will fade out
         setCurrentStep((prev) => prev + 1);
       },
     });
