@@ -5,7 +5,7 @@ import {
   ConversationScrollButton,
 } from "@/components/ui/conversation";
 import { useChat } from "../createContext";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { SplitText } from "gsap/SplitText";
@@ -53,6 +53,7 @@ function ChatConversation() {
     setIsProcessing,
     handleOptionUpdate,
     survey,
+    deleteMessage
   } = useChat();
 
   const handleOption = (option) => {
@@ -238,97 +239,228 @@ function ChatConversation() {
   // voice call refs and states
 
   const [connectionStatus, setConnectionStatus] = useState("idle");
+  const [orbState, setOrbState] = useState("listening");
+  const [callEnd, setCallEnd] = useState(false)
   const socketRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioContextRef = useRef(null);
-  const [orbState, setOrbState] = useState("listening");
+  const processorRef = useRef(null)
+  const nextStartTimeRef = useRef(null)
 
-  const activateVoiceAgent = async () => {
-    setConnectionStatus("connecting");
+  // FIX: Track messages in a Ref so we can read them without re-triggering effects
+  const messagesRef = useRef(message);
+  useEffect(() => {
+    messagesRef.current = message;
+  }, [message]);
 
-    const [instructionsResponse, tokenResponse] = await Promise.all([
-      fetch("http://localhost:3021/api/prepare-voice-context", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ survey }),
-      }),
-      fetch("http://localhost:3021/api/token-key"),
-    ]);
-
-    const { instructions } = await instructionsResponse.json();
-    const token = await tokenResponse.json();
-
-    console.log("instructions", instructions);
-    console.log("token", token);
-
-    // open the phone link or communication link (by initialising websocket)
-    socketRef.current = new WebSocket("wss://agent.deepgram.com/agent", [
-      "token",
-      token,
-    ]);
-
-    // when the connection is open run the below code
-    // configure the ai (set model, give instructions, set audio type)
-    socketRef.current.onopen = async () => {
-      setConnectionStatus("active");
-
-      
-      socketRef.current.send(
-        JSON.stringify({
-          type: "Settings",
-          audio: {
-            input: { encoding: "webm", sample_rate: 48000 },
-            output: {
-              encoding: "linear16",
-              sample_rate: 24000,
-              container: "none",
-            },
-          },
-          agent: {
-            listen: { model: "nova-2" },
-            think: {
-              provider: { type: "open_ai" },
-              model: "gpt-4o-mini",
-              instructions,
-            },
-            speak: { model: "aura-asteria-en" },
-          },
-        })
-      );
-
-      // acts as the ear of our voice agent
-      const stream = navigator.mediaDevices.getUserMedia({ audio: true }); // set the audio permission to be true
-      mediaRecorderRef.current = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
+  // --- 1. HELPER: PLAY AUDIO ---
+  const playAudio = async (blob) => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({
+        latencyHint: "interactive",
       });
-      mediaRecorderRef.current.addEventListener("dataavailable", (event) => {
-        if (event.data.size > 0 && socketRef.current?.readyState === 1) {
-          socketRef.current.send(event.data); // send the audio that is collected and send it to the websocket tunnel every 250 milliseconds which in turn acts like a call
-        }
-      });
-      mediaRecorderRef.current.start(250); // Send chunks every 250ms
-    };
-    // acts as the mouth of the voice agent
-    socketRef.current.onmessage = async (message) => {
-      if (message.data instanceof Blob) { // if the message is a blob which is binary data then run the playAudio function which plays the audio  
-        playAudio(message.data);
-        console.log("blob text", message.data)
-        setOrbState("talking");
-      } else { // if the message is text then check for transcripts      
-        const event = JSON.parse(message.data);
-        console.log("event text", event)
+    }
+    const audioCtx = audioContextRef.current;
 
-        if(event.type === "ConversationText") {
-          addMessage(
-                 event.role === "user" ? "user" : "assistant", 
-                 event.content
-               );
-        }
-      }
+    // 1. Read the Raw Int16 bytes
+    const arrayBuffer = await blob.arrayBuffer();
+    const int16Data = new Int16Array(arrayBuffer);
 
-      
+    // 2. Convert to Float32 (Standard Browser Format)
+    const float32Data = new Float32Array(int16Data.length);
+    for (let i = 0; i < int16Data.length; i++) {
+      // Normalize -32768..32767 to -1.0..1.0
+      float32Data[i] = int16Data[i] / 32768.0;
+    }
+
+    // 3. Create an Audio Buffer
+    // 24000 matches your "output.sample_rate" in settings
+    const buffer = audioCtx.createBuffer(1, float32Data.length, 24000);
+    buffer.getChannelData(0).set(float32Data);
+
+    // 4. Play it (Queued for smoothness)
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+
+    // Schedule playback to ensure chunks play back-to-back without gaps
+    const currentTime = audioCtx.currentTime;
+    // If the queue has fallen behind current time, reset it
+    if (nextStartTimeRef.current < currentTime) {
+      nextStartTimeRef.current = currentTime;
+    }
+    
+    source.start(nextStartTimeRef.current);
+    
+    // Advance the pointer
+    nextStartTimeRef.current += buffer.duration;
+    
+    source.onended = () => {
+        // Optional: logic when a specific chunk finishes
     };
   };
+
+  // --- 2. HELPER: END CALL ---
+  const endCall = useCallback(() => {
+    socketRef.current?.close();
+    mediaRecorderRef.current?.stop();
+    setConnectionStatus("idle");
+    setOrbState("listening");
+
+    deleteMessage()
+  }, [setIsProcessing, deleteMessage]);
+
+ useEffect(() => {
+    if (!isProcessing || !survey.isCompleted || connectionStatus !== "idle") return;
+
+    let isMounted = true;
+
+    const startAgent = async () => {
+      try {
+        setConnectionStatus("connecting");
+        console.log("🚀 Starting Agent Connection...");
+
+        // A. Fetch Config
+        const [instructionsResponse, tokenResponse] = await Promise.all([
+          fetch("http://localhost:3021/api/get-voice-context", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ surveyData: survey }),
+          }),
+          fetch("http://localhost:3021/api/get-agent-token"),
+        ]);
+
+        const { instructions } = await instructionsResponse.json();
+        const { key } = await tokenResponse.json();
+
+        // B. Prepare History
+        const historyMessages = messagesRef.current
+          .filter((m) => m.sender === "user" || m.sender === "assistant")
+          .map((m) => ({
+            type: "History",
+            role: m.sender === "user" ? "user" : "assistant",
+            content: typeof m.text === "string" ? m.text : JSON.stringify(m.text),
+          }));
+
+        if (!isMounted) return;
+
+        // C. Connect WebSocket
+        socketRef.current = new WebSocket(
+          "wss://agent.deepgram.com/v1/agent/converse",
+          ["bearer", key]
+        );
+
+        socketRef.current.onerror = (error) => console.error("❌ WebSocket Error:", error);
+        socketRef.current.onclose = (event) => {
+             console.log(`🔌 Closed: ${event.code} - ${event.reason}`);
+             if (isMounted) setConnectionStatus("idle");
+        };
+
+        socketRef.current.onopen = async () => {
+          if (!isMounted) return;
+          console.log("✅ WebSocket Open!");
+          setConnectionStatus("active");
+
+          // 1. Get Mic Stream FIRST to know the Sample Rate
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          
+          if (!audioContextRef.current) {
+            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          const sampleRate = audioContextRef.current.sampleRate;
+
+          // 2. Send Settings with LINEAR16 and Dynamic Sample Rate
+          const settings = {
+            type: "Settings",
+            audio: {
+              input: { 
+                  encoding: "linear16", // ✅ THE FIX: Raw PCM Audio
+                  sample_rate: sampleRate // ✅ Must match the browser's mic
+              },
+              output: {
+                encoding: "linear16",
+                sample_rate: 24000,
+                container: "none",
+              },
+            },
+            agent: {
+              listen: { provider: { type: "deepgram", model: "nova-2" } },
+              think: {
+                provider: { type: "open_ai", model: "gpt-4o-mini" },
+                prompt: instructions,
+              },
+              speak: { provider: { type: "deepgram", model: "aura-2-thalia-en" } },
+              context: { messages: historyMessages },
+            },
+          };
+          socketRef.current.send(JSON.stringify(settings));
+
+          // 3. Setup Audio Processing (Raw PCM)
+          const source = audioContextRef.current.createMediaStreamSource(stream);
+          // Buffer size 4096 = ~85ms latency @ 48kHz
+          const processor = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+          processorRef.current = processor; // Save ref to stop later
+
+          source.connect(processor);
+          processor.connect(audioContextRef.current.destination);
+
+          processor.onaudioprocess = (e) => {
+            if (socketRef.current?.readyState === 1) {
+                const inputData = e.inputBuffer.getChannelData(0);
+                
+                // 🛠️ CONVERT FLOAT32 (Browser) -> INT16 (Deepgram)
+                const buffer = new ArrayBuffer(inputData.length * 2);
+                const view = new DataView(buffer);
+                for (let i = 0; i < inputData.length; i++) {
+                    const s = Math.max(-1, Math.min(1, inputData[i]));
+                    // Convert range [-1.0, 1.0] to [-32768, 32767]
+                    view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                }
+                
+                socketRef.current.send(buffer);
+            }
+          };
+        };
+
+        // F. Handle Messages
+        socketRef.current.onmessage = async (message) => {
+          if (message.data instanceof Blob) {
+            playAudio(message.data);
+            setOrbState("talking");
+            // console.log("blob data", message.data)
+          } else {
+            const event = JSON.parse(message.data);
+            if(event.type === "Error") console.error("DEEPGRAM ERROR:", event);
+            
+            if (event.type === "ConversationText") {
+              addMessage(event.role === "user" ? "user" : "assistant", event.content);
+              console.log("text daata", event.content)
+              
+            }
+            if (event.type === "UserStartedSpeaking") setOrbState("listening");
+          }
+        };
+
+      } catch (error) {
+        console.error("❌ Setup Error:", error);
+        if (isMounted) setConnectionStatus("error");
+      }
+    };
+
+    startAgent();
+
+    return () => {
+      isMounted = false;
+      socketRef.current?.close();
+      // Stop the processor and audio context
+      if (processorRef.current) {
+        processorRef.current.disconnect();
+        processorRef.current = null;
+      }
+      // Don't close AudioContext immediately if you want to play response audio, 
+      // but usually good practice to suspend it or disconnect sources.
+    };
+  }, [isProcessing, survey.isCompleted]);
 
   return (
     <WavyBackground className="p-4">
@@ -393,9 +525,7 @@ function ChatConversation() {
                     const isOptions = msg.sender === "chosenOption";
                     const textContent = isUser
                       ? msg.text
-                      : `${msg.text.feedback || ""} ${
-                          msg.text.nextQuestion || ""
-                        }`;
+                      : msg.text;
                     const grade = !isUser ? msg.text.grade : undefined;
                     const options =
                       !isUser && !isOptions && msg.text.options
@@ -470,8 +600,27 @@ function ChatConversation() {
               <ConversationScrollButton />
             </Conversation>
 
-            <div className="p-2 md:p-0">
-              <ChatInput />
+            <div className="p-4 border-t border-white/10 bg-black/40 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    connectionStatus === "active"
+                      ? "bg-green-500 animate-pulse"
+                      : "bg-yellow-500"
+                  }`}
+                ></div>
+                <span className="text-gray-400 text-sm">
+                  {connectionStatus === "active"
+                    ? "Listening..."
+                    : "Connecting..."}
+                </span>
+              </div>
+              <button
+                onClick={endCall}
+                className="px-6 py-2 bg-red-500/10 border border-red-500/50 text-red-500 text-xs rounded-full hover:bg-red-500/20 transition"
+              >
+                End Call
+              </button>
             </div>
           </div>
         </Card>

@@ -25,6 +25,10 @@ export const ChatProvider = ({ children }) => {
     ]);
   };
 
+  const deleteMessage = () => {
+    setMessage([])
+  }
+
   const handleOptionUpdate = (option) => {
     setMessage((prev) => {
       const lastMsg = prev[prev.length - 1];
@@ -52,7 +56,8 @@ export const ChatProvider = ({ children }) => {
         setSelectNiche,
         survey,
         setSurvey,
-        handleOptionUpdate
+        handleOptionUpdate,
+        deleteMessage
       }}
     >
       {children}

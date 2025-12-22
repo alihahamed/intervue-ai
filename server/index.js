@@ -9,8 +9,10 @@ import { dirname } from "path";
 import { AudioResponse } from "./services/audioService.js";
 import { getAiResponse } from "./services/aiService.js";
 import { TextToSpeech } from "./services/ttsService.js";
-import { SysInstruction } from "./services/systemPrompt.js";
+import { VoiceSysInstruction } from "./services/voiceInstructions.js";
 import { json } from "stream/consumers";
+
+import { createClient } from "@deepgram/sdk";
 
 const app = express();
 app.use(cors());
@@ -18,112 +20,44 @@ app.use(express.json());
 
 const port = 3021;
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // the folder where the audio files are saved
-  },
-  filename: function (req, file, cb) {
-    // We add Date.now() to the name to prevent files overwriting each other
-    // e.g., "audio-123456789.wav"
-    cb(null, "audio-" + Date.now() + path.extname(file.originalname));
-  },
-});
+const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
 
-const upload = multer({ storage: storage });
-
-// audio upload endpoint
-
-app.post("/upload-audio", upload.single("audio"), async (req, res) => {
-  // upload.single('audio') looks for a file name with 'audio'
-  if (!req.file) {
-    return res.status(400).json({ message: "Error while recieving the file" });
-  }
-
-  const filePath = req.file.path; // the file path of the audio file
-  // const surveyData = req.body.survey
-  // console.log("survey data", surveyData)
-
-  let history = [];
+app.get("/api/get-agent-token", async (req, res) => {
+  const url = "https://api.deepgram.com/v1/auth/grant";
+  const options = {
+    method: "POST",
+    headers: { Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`, "Content-Type": "application/json" },
+    body: {
+      ttl_seconds:300
+    },
+  };
 
   try {
-    history = JSON.parse(req.body.history || []);
-  } catch (error) {
-    console.log("Error converting string to array", error);
-    history = [];
-  }
-
-  try {
-    const userText = await AudioResponse(filePath); // extracting the user's text from the audio (Audio -> Text)
-    console.log("extracted text from audio", userText);
-
-    if (!userText) {
-      // error handling
-      console.log("Maybe couldnt hear the audio and translate it to text");
-      return res.json({
-        message: "Error transcribing the audio to text",
-        success: false,
-      });
-    }
+    const response = await fetch(url, options)
+    const data = await response.json();
+    console.log("key data", data);
 
     return res.json({
-      userText: userText,
-      success: true,
+      key: data.access_token,
     });
   } catch (error) {
-    console.log("error while sending data from upload-audio endpoint", error);
-    return res.status(400).json({ message: error, success: false });
+    console.log("error generating access token", error);
+    res.status(500).json({
+      error: "failed to provide interview context",
+    });
   }
 });
 
-// text upload endpoint
-
-app.post("/upload-text", async (req, res) => {
-  const userText = req.body.text;
-  const history = req.body.history; // THE CHAT HISTORY CONVERSTATION
-  const surveyData = req.body.survey; // SURVEY DATA FROM THE MODAL
-
-  console.log(history);
-
-  const systemInstructions = await SysInstruction(surveyData);
-  
+app.post("/api/get-voice-context", async (req, res) => {
+  const survey = req.body.surveyData;
 
   try {
-    const aiResponse = await getAiResponse(
-      userText,
-      systemInstructions,
-      history
-    );
-    // console.log("Text endpoint ai response to the user:", aiResponse);
-
-    let aiData;
-
-    try {
-      aiData = JSON.parse(aiResponse);
-      console.log("ai data:", aiData);
-    } catch (error) {
-      console.log("error parsing json to object");
-      aiData = {
-        grade: 0,
-        feedback: "Couldnt completed the request",
-        nextQuestion: "",
-      };
-    }
-
-    const cleanText = `${aiData.feedback} ${aiData.nextQuestion}`;
-    // console.log("clean text", cleanText);
-
-    const audioBuffer = await TextToSpeech(cleanText);
-    const audioBase64 = audioBuffer ? audioBuffer.toString("base64") : null;
-
+    const instructions = await VoiceSysInstruction(survey);
+    console.log("voice context data", instructions);
     return res.json({
-      userText: userText,
-      aiResponse: aiData,
-      audio: audioBase64,
+      instructions,
     });
-  } catch (error) {
-    console.log("error while sending data from upload-text endpoint", error);
-    return res.status(400);
-  }
+  } catch (error) {}
 });
 
 app.listen(port, () => {
