@@ -258,6 +258,10 @@ function ChatConversation() {
     }
     const audioCtx = audioContextRef.current;
 
+    if (audioCtx.state === "suspended") {
+        await audioCtx.resume();
+    }
+
     // 1. Read the Raw Int16 bytes
     const arrayBuffer = await blob.arrayBuffer();
     const int16Data = new Int16Array(arrayBuffer);
@@ -318,6 +322,9 @@ function ChatConversation() {
       audioContextRef.current.close();
       audioContextRef.current = null;
     }
+
+    nextStartTimeRef.current = 0;
+    
     setConnectionStatus("idle");
     setOrbState("listening");
 
@@ -354,6 +361,7 @@ function ChatConversation() {
           role: m.sender === "user" ? "user" : "assistant",
           content: typeof m.text === "string" ? m.text : JSON.stringify(m.text),
         }));
+        
 
       if (!isMounted) return;
 
@@ -374,6 +382,7 @@ function ChatConversation() {
         if (!isMounted) return;
         console.log("✅ WebSocket Open!");
         setConnectionStatus("active");
+        console.log("history", historyMessages)
 
         // 1. Get Mic Stream FIRST to know the Sample Rate
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -451,8 +460,10 @@ function ChatConversation() {
           playAudio(message.data);
           setOrbState("talking");
           // console.log("blob data", message.data)
+          console.log(orbState)
         } else {
           const event = JSON.parse(message.data);
+          console.log("event", event)
           if (event.type === "Error") console.error("DEEPGRAM ERROR:", event);
 
           if (event.type === "ConversationText") {
@@ -493,56 +504,59 @@ function ChatConversation() {
                       description="Start the Call to see the messages here"
                     />
                   ) : (
-                    message.map((msg, index) => {
-                      if (msg.sender === "chosenOption") return null;
-                      const isUser = msg.sender === "user";
-                      const textContent = isUser ? msg.text : msg.text;
-                      const grade = !isUser ? msg.text.grade : undefined;
+                    // message.map((msg, index) => {
+                      
+                    //   const isUser = msg.sender === "user";
+                    //   const textContent = isUser ? msg.text : msg.text;
+                    //   const grade = !isUser ? msg.text.grade : undefined;
 
-                      return (
-                        <Message
-                          key={msg.id || index}
-                          from={isUser ? "user" : "assistant"}
-                          className={`flex w-full gap-2 md:gap-3 items-start py-1 md:py-2 ${
-                            isUser ? "justify-end" : "justify-start"
-                          }`}
-                        >
-                          {/* AVATAR */}
-                          {!isUser && (
-                            <div className="ring-border size-6 md:size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
-                              <Orb
-                                className="h-full w-full"
-                                agentState="talking"
-                              />
-                            </div>
-                          )}
+                    //   return (
+                        // <Message
+                        //   key={msg.id || index}
+                        //   from={isUser ? "user" : "assistant"}
+                        //   className={`flex w-full gap-2 md:gap-3 items-start py-1 md:py-2 ${
+                        //     isUser ? "justify-end" : "justify-start"
+                        //   }`}
+                        // >
+                        //   {/* AVATAR */}
+                        //   {!isUser && (
+                        //     <div className="ring-border size-6 md:size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
+                        //       <Orb
+                        //         className="h-full w-full"
+                        //         agentState="talking"
+                        //       />
+                        //     </div>
+                        //   )}
 
-                          {/* BUBBLE CONTENT */}
-                          <MessageContent
-                            className={cn(
-                              "relative flex flex-col gap-3 rounded-2xl px-4 py-3 text-sm shadow-sm",
-                              "w-fit max-w-[90%] md:max-w-[85%] whitespace-pre-wrap break-words",
-                              isUser
-                                ? "bg-white text-black rounded-br-none ml-auto"
-                                : "bg-[#27272a] text-white rounded-tl-none mr-auto overflow-visible"
-                            )}
-                          >
-                            {!isUser && grade !== undefined && (
-                              <GradeBadge grade={grade} />
-                            )}
+                        //   {/* BUBBLE CONTENT */}
+                        //   <MessageContent
+                        //     className={cn(
+                        //       "relative flex flex-col gap-3 rounded-2xl px-4 py-3 text-sm shadow-sm",
+                        //       "w-fit max-w-[90%] md:max-w-[85%] whitespace-pre-wrap break-words",
+                        //       isUser
+                        //         ? "bg-white text-black rounded-br-none ml-auto"
+                        //         : "bg-[#27272a] text-white rounded-tl-none mr-auto overflow-visible"
+                        //     )}
+                        //   >
+                        //     {!isUser && grade !== undefined && (
+                        //       <GradeBadge grade={grade} />
+                        //     )}
 
-                            {/* TEXT */}
-                            <div>
-                              {!isUser ? (
-                                <TextGenerateEffect words={textContent} />
-                              ) : (
-                                textContent
-                              )}
-                            </div>
-                          </MessageContent>
-                        </Message>
-                      );
-                    })
+                        //     {/* TEXT */}
+                        //     <div>
+                        //       {!isUser ? (
+                        //         <TextGenerateEffect words={textContent} />
+                        //       ) : (
+                        //         textContent
+                        //       )}
+                        //     </div>
+                        //   </MessageContent>
+                        // </Message>
+                        <>
+                        <Orb className="flex justify-center items-center h-full w-full text-center size-full" agentState={orbState === "talking" ? "talking" : "listening"} />
+                        </>
+                    //   );
+                    // })
                   )}
                 </ConversationContent>
                 <ConversationScrollButton />
