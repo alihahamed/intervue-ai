@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { Children } from "react";
 import { ChatContext } from "./createContext";
 
@@ -6,13 +6,21 @@ export const ChatProvider = ({ children }) => {
   const [message, setMessage] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectNiche, setSelectNiche] = useState("Hooks");
-  const [survey, setSurvey] = useState({
-    userName: "Ali",
-    experience: "No Experience",
-    techStack: "React, Nodejs",
-    targetRole: "Frontend Developer",
-    isCompleted:false
-  });
+  const [survey, setSurvey] = useState(() => {
+    const surveyData = localStorage.getItem("surveyData") // find the data from local storage
+
+    return surveyData ? JSON.parse(surveyData)  : { // unpacks the survey to use the items inside
+      userName: "Ali",
+      experience: "No Experience",
+      techStack: "React, Nodejs",
+      targetRole: "Frontend Developer",
+      isCompleted: false
+    }
+  })
+
+  useEffect(() => {
+    localStorage.setItem("surveyData", JSON.stringify(survey)) // converts the survey object into a string
+  }, [survey])
 
   const addMessage = (sender, text, audioBase64 = null) => {
     setMessage((prev) => [

@@ -21,30 +21,8 @@ import ChatInput from "./chatInput";
 import { WavyBackground } from "./ui/wavy-background";
 import { HoverBorderGradient } from "./ui/hover-border-gradient";
 import { Button } from "./ui/moving-border";
+import FloatingLines from "./ui/FloatingLines";
 import { Mic, MicOff } from "lucide-react";
-
-const GradeBadge = ({ grade }) => {
-  if (grade === null || grade === undefined) return null;
-
-  let styles = "bg-red-500 border-red-600 text-white shadow-red-500/30";
-  if (grade >= 8) {
-    styles = "bg-green-500 border-green-600 text-black shadow-green-500/30";
-  } else if (grade >= 5) {
-    styles = "bg-amber-500 border-amber-600 text-white shadow-amber-500/30";
-  }
-
-  return (
-    <Badge
-      className={cn(
-        "absolute -top-3 -right-1 md:-right-2 z-20 pointer-events-none shadow-md",
-        "px-2 py-0.5 text-[10px] h-5 min-w-fit justify-center rounded-full border",
-        styles
-      )}
-    >
-      Grade: {grade}
-    </Badge>
-  );
-};
 
 function ChatConversation() {
   const {
@@ -56,11 +34,6 @@ function ChatConversation() {
     survey,
     deleteMessage,
   } = useChat();
-
-  const handleOption = (option) => {
-    handleOptionUpdate(option);
-    console.log("chosen option", option);
-  };
 
   // gsap animations
 
@@ -478,9 +451,167 @@ function ChatConversation() {
     }
   };
 
+  // show the interview interface if survey is completed
+  if (survey.isCompleted) {
+    return (
+      // 1. MAIN CONTAINER: Full Screen & Relative
+      <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center">
+        {/* 2. BACKGROUND LAYER (Absolute & Z-0) */}
+        {/* The lines sit behind everything else */}
+        <div className="absolute inset-0 z-0">
+          <FloatingLines
+            enabledWaves={["top", "middle", "bottom"]}
+            // Array - specify line count per wave; Number - same count for all waves
+            lineCount={[10, 15, 20]}
+            // Array - specify line distance per wave; Number - same distance for all waves
+            lineDistance={[8, 6, 4]}
+            bendRadius={5.0}
+            bendStrength={-0.5}
+            interactive={true}
+            parallax={true}
+          />
+        </div>
+
+        {/* 3. CONTENT LAYER (Relative & Z-10) */}
+        {/* The Card sits on top. Note: We removed FloatingLines as the parent */}
+        <div className="relative z-10 w-full flex items-center justify-center px-4">
+          <Card className="chat-card-container w-full max-w-4xl h-[620px] md:h-[590px] xl:h-[550px] 2xl:h-[650px] bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+            <div className="flex h-full flex-col z-10 relative w-full">
+              <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
+                <ConversationContent className="p-2 md:p-4 space-y-4">
+                  {message.length === 0 ? (
+                    <ConversationEmptyState
+                      icon={<Orb className="size-25" agentState="listening" />}
+                      title="Are You Ready?"
+                      description="Start the Call to see the messages here"
+                    />
+                  ) : (
+                    message.map((msg, index) => {
+                      if (msg.sender === "chosenOption") return null;
+                      const isUser = msg.sender === "user";
+                      const textContent = isUser ? msg.text : msg.text;
+                      const grade = !isUser ? msg.text.grade : undefined;
+
+                      return (
+                        <Message
+                          key={msg.id || index}
+                          from={isUser ? "user" : "assistant"}
+                          className={`flex w-full gap-2 md:gap-3 items-start py-1 md:py-2 ${
+                            isUser ? "justify-end" : "justify-start"
+                          }`}
+                        >
+                          {/* AVATAR */}
+                          {!isUser && (
+                            <div className="ring-border size-6 md:size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
+                              <Orb
+                                className="h-full w-full"
+                                agentState="talking"
+                              />
+                            </div>
+                          )}
+
+                          {/* BUBBLE CONTENT */}
+                          <MessageContent
+                            className={cn(
+                              "relative flex flex-col gap-3 rounded-2xl px-4 py-3 text-sm shadow-sm",
+                              "w-fit max-w-[90%] md:max-w-[85%] whitespace-pre-wrap break-words",
+                              isUser
+                                ? "bg-white text-black rounded-br-none ml-auto"
+                                : "bg-[#27272a] text-white rounded-tl-none mr-auto overflow-visible"
+                            )}
+                          >
+                            {!isUser && grade !== undefined && (
+                              <GradeBadge grade={grade} />
+                            )}
+
+                            {/* TEXT */}
+                            <div>
+                              {!isUser ? (
+                                <TextGenerateEffect words={textContent} />
+                              ) : (
+                                textContent
+                              )}
+                            </div>
+                          </MessageContent>
+                        </Message>
+                      );
+                    })
+                  )}
+                </ConversationContent>
+                <ConversationScrollButton />
+              </Conversation>
+
+              {/* DEDICATED CONTROLS FOOTER */}
+              <div className="w-full flex justify-center p-4 bg-[#09090b]/90 backdrop-blur-md border-t border-white/5 z-20">
+                <div className="flex items-center justify-between gap-4 px-5 py-3 bg-zinc-900/80 border border-white/10 rounded-full shadow-2xl w-full max-w-md">
+                  {/* Status Indicator */}
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <div
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          connectionStatus === "active"
+                            ? "bg-emerald-400"
+                            : "bg-amber-400"
+                        }`}
+                      />
+                      {connectionStatus === "active" && (
+                        <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping opacity-75" />
+                      )}
+                    </div>
+                    <span className="text-zinc-400 text-sm font-medium">
+                      {connectionStatus === "active"
+                        ? "Listening..."
+                        : "Connecting..."}
+                    </span>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      disabled={callEnd}
+                      className={`p-2.5 rounded-full transition-all duration-200 ${
+                        callEnd
+                          ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                          : isMuted
+                          ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                          : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                      }`}
+                    >
+                      {isMuted ? (
+                        <MicOff className="w-5 h-5" />
+                      ) : (
+                        <Mic className="w-5 h-5" />
+                      )}
+                    </button>
+
+                    {!callEnd ? (
+                      <button
+                        onClick={endCall}
+                        className="px-5 py-2.5 bg-red-500 text-white text-sm font-medium rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg shadow-red-500/25"
+                      >
+                        End Call
+                      </button>
+                    ) : (
+                      <button
+                        onClick={startAgent}
+                        className="px-5 py-2.5 bg-emerald-500 text-white text-sm font-medium rounded-full hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
+                      >
+                        Start Call
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // hero and wagera wagera
   return (
     <WavyBackground className="p-4">
-      {console.log(isProcessing)}
       <div className="font-bold text-4xl md:text-5xl lg:text-[68px]  mb-6 text-center tracking-tight z-10">
         <h1 className="heroText">
           <span>Master Your</span>{" "}
@@ -523,192 +654,33 @@ function ChatConversation() {
         </HoverBorderGradient>
       </div>
 
-      {isProcessing && survey.isCompleted ? (
-        <Card className="chat-card-container relative mx-auto items-center justify-center w-[90%] md:w-full max-w-4xl h-[620px] md:h-[590px] xl:h-[550px] 2xl:h-[650px] bg-[#09090b]/90 border border-[#27272a] shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
-        {/* ✅ MAIN FLEX CONTAINER: Takes full height */}
-        <div className="flex h-full flex-col z-10 relative w-full">
-          
-          {/* ✅ 1. CONVERSATION AREA (Flex-1) */}
-          {/* This takes up all available space ABOVE the controls */}
-          <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
-            <ConversationContent className="p-2 md:p-4 space-y-4">
-              {message.length === 0 ? (
-                <ConversationEmptyState
-                  icon={<Orb className="size-25" agentState="listening" />}
-                  title="Are You Ready?"
-                  description="Start the Call to see the messages here"
-                />
-              ) : (
-                message.map((msg, index) => {
-                  if (msg.sender === "chosenOption") return null;
-                  const isUser = msg.sender === "user";
-                  const isOptions = msg.sender === "chosenOption";
-                  const textContent = isUser ? msg.text : msg.text;
-                  const grade = !isUser ? msg.text.grade : undefined;
-                  const options =
-                    !isUser && !isOptions && msg.text.options
-                      ? msg.text.options.map((opt) => (
-                          <button
-                            className="w-fit text-left bg-white/5 border border-white/20 text-white px-3 py-1.5 rounded-full text-xs hover:bg-white/20 transition-colors"
-                            onClick={() => handleOption(opt)}
-                            key={opt}
-                          >
-                            {opt}
-                          </button>
-                        ))
-                      : null;
-
-                  return (
-                    <Message
-                      key={msg.id || index}
-                      from={isUser ? "user" : "assistant"}
-                      className={`flex w-full gap-2 md:gap-3 items-start py-1 md:py-2 ${
-                        isUser ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      {/* AVATAR */}
-                      {!isUser && (
-                        <div className="ring-border size-6 md:size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
-                          <Orb className="h-full w-full" agentState="talking" />
-                        </div>
-                      )}
-
-                      {/* BUBBLE CONTENT */}
-                      <MessageContent
-                        className={cn(
-                          "relative flex flex-col gap-3 rounded-2xl px-4 py-3 text-sm shadow-sm",
-                          "w-fit max-w-[90%] md:max-w-[85%] whitespace-pre-wrap break-words",
-                          isUser
-                            ? "bg-white text-black rounded-br-none ml-auto"
-                            : "bg-[#27272a] text-white rounded-tl-none mr-auto overflow-visible"
-                        )}
-                      >
-                        {!isUser && grade !== undefined && (
-                          <GradeBadge grade={grade} />
-                        )}
-
-                        {/* TEXT */}
-                        <div>
-                          {!isUser ? (
-                            <TextGenerateEffect words={textContent} />
-                          ) : (
-                            textContent
-                          )}
-                        </div>
-
-                        {/* OPTIONS */}
-                        {options && (
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {options}
-                          </div>
-                        )}
-                      </MessageContent>
-                    </Message>
-                  );
-                })
-              )}
-            </ConversationContent>
-            {/* The scroll button will now sit naturally at the bottom of this flex area */}
-            <ConversationScrollButton />
-          </Conversation>
-
-          {/* ✅ 2. DEDICATED CONTROLS FOOTER */}
-          {/* Removed 'absolute', added 'p-4' and 'z-20'. It now sits strictly below the chat. */}
-          <div className="w-full flex justify-center p-4 bg-[#09090b]/50 backdrop-blur-md border-t border-white/5 z-20">
-            <div className="flex items-center justify-between gap-4 px-5 py-3 bg-zinc-900/80 border border-white/10 rounded-full shadow-2xl w-full max-w-md">
-              
-              {/* Status Indicator */}
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      connectionStatus === "active"
-                        ? "bg-emerald-400"
-                        : "bg-amber-400"
-                    }`}
-                  />
-                  {connectionStatus === "active" && (
-                    <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping opacity-75" />
-                  )}
-                </div>
-                <span className="text-zinc-400 text-sm font-medium">
-                  {connectionStatus === "active"
-                    ? "Listening..."
-                    : "Connecting..."}
-                </span>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                {/* Mute Button */}
-                <button
-                  disabled={callEnd}
-                  className={`p-2.5 rounded-full transition-all duration-200 ${
-                    callEnd
-                      ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                      : isMuted
-                      ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-                  }`}
-                >
-                  {isMuted ? (
-                    <MicOff className="w-5 h-5" />
-                  ) : (
-                    <Mic className="w-5 h-5" />
-                  )}
-                </button>
-
-                {/* Start/End Call Button */}
-                {!callEnd ? (
-                  <button
-                    onClick={endCall}
-                    className="px-5 py-2.5 bg-red-500 text-white text-sm font-medium rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg shadow-red-500/25"
-                  >
-                    End Call
-                  </button>
-                ) : (
-                  <button
-                    onClick={startAgent}
-                    className="px-5 py-2.5 bg-emerald-500 text-white text-sm font-medium rounded-full hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
-                  >
-                    Start Call
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-          
-        </div>
-      </Card>
-      ) : (
-        <div className="flex items-center justify-center">
-          <Button
-            onClick={() => setIsProcessing(true)}
-            className="overflow-hidden "
-            onMouseEnter={() => tlRef.current?.play()}
-            onMouseLeave={() => tlRef.current?.reverse()}
-            containerClassName="pop-btn"
+      <div className="flex items-center justify-center">
+        <Button
+          onClick={() => setIsProcessing(true)}
+          className="overflow-hidden "
+          onMouseEnter={() => tlRef.current?.play()}
+          onMouseLeave={() => tlRef.current?.reverse()}
+          containerClassName="pop-btn"
+        >
+          <div
+            ref={containerRef}
+            className="relative h-5 overflow-hidden flex flex-col"
           >
-            <div
-              ref={containerRef}
-              className="relative h-5 overflow-hidden flex flex-col"
-            >
-              {/* Original Text */}
-              <span className=" btn-text-1" style={{ whiteSpace: "pre" }}>
-                Get started
-              </span>
+            {/* Original Text */}
+            <span className=" btn-text-1" style={{ whiteSpace: "pre" }}>
+              Get started
+            </span>
 
-              {/* Duplicate Text */}
-              <span
-                className=" absolute top-full left-0 right-0 btn-text-2"
-                style={{ whiteSpace: "pre" }}
-              >
-                Get started
-              </span>
-            </div>
-          </Button>
-        </div>
-      )}
+            {/* Duplicate Text */}
+            <span
+              className=" absolute top-full left-0 right-0 btn-text-2"
+              style={{ whiteSpace: "pre" }}
+            >
+              Get started
+            </span>
+          </div>
+        </Button>
+      </div>
     </WavyBackground>
   );
 }
