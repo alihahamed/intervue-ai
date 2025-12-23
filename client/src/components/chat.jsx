@@ -493,7 +493,7 @@ function ChatConversation() {
         <InterviewBackground />
         <div className="relative z-10 w-full flex items-center justify-center px-4 pointer-events-none">
           
-          <Card className="chat-card-container pointer-events-auto w-full max-w-5xl h-[620px] md:h-[630px] xl:h-[650px] 2xl:h-[650px] bg-[#09090b]/90 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+          <Card className="chat-card-container pointer-events-auto w-[60vw] max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
             <div className="flex h-full flex-col z-10 relative w-full">
               <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
                 <ConversationContent className="p-2 md:p-4 space-y-4">
@@ -553,7 +553,7 @@ function ChatConversation() {
                         //   </MessageContent>
                         // </Message>
                         <>
-                        <Orb className="flex justify-center items-center h-full w-full text-center size-full" agentState={orbState === "talking" ? "talking" : "listening"} />
+                        <Orb className="flex justify-center items-center h-full w-full text-center size-full" agentState={orbState} />
                         </>
                     //   );
                     // })
@@ -563,8 +563,8 @@ function ChatConversation() {
               </Conversation>
 
               {/* DEDICATED CONTROLS FOOTER */}
-              <div className="w-full flex justify-center p-4 bg-[#09090b]/90 backdrop-blur-md border-t border-white/5 z-20">
-                <div className="flex items-center justify-between gap-4 px-5 py-3 bg-zinc-900/80 border border-white/10 rounded-full shadow-2xl w-full max-w-md">
+              <div className="w-full flex justify-center p-4 z-20">
+                <div className="flex items-center justify-between gap-4 px-5 py-3 bg-[#09090b]/60 border border-white/10 rounded-full shadow-2xl w-full max-w-md">
                   {/* Status Indicator */}
                   <div className="flex items-center gap-3">
                     <div className="relative">
