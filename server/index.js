@@ -55,7 +55,7 @@ app.get("/api/get-agent-token", async (req, res) => {
 const client = createClient(process.env.SUPABASE_PROJECT_URL, process.env.SUPABASE_API_KEY)
 
 const embeddings = new GoogleGenerativeAIEmbeddings({ // the reason we're initialising embeddings again here is because to retreieve the stored vector data from the database by matching it against the vector embedding instead of just plain english
-  modelName:'embedding-001',
+  modelName:'text-embedding-004',
   taskType:TaskType.RETRIEVAL_QUERY,
   apiKey:process.env.GOOGLE_API_KEY
 })
@@ -72,8 +72,10 @@ app.post("/api/get-voice-context", async (req, res) => {
   const survey = req.body.surveyData;
 
   try {
-    const similiarSearch = await vectorStore.similaritySearch(`${survey.techStack} interview questions of ${survey.experience} level`, 3)
-    console.log("similiar search response", similiarSearch)
+    // const similiarSearch = await vectorStore.similaritySearch(`${survey.techStack} interview questions of ${survey.experience} level`, 3)
+    // console.log("similiar search response", similiarSearch)
+
+    const pageContent = similiarSearch.map(s => s.pageContent)
 
     const instructions = await VoiceSysInstruction(survey);
     
