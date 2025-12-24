@@ -11,6 +11,11 @@ import { getAiResponse } from "./services/aiService.js";
 import { TextToSpeech } from "./services/ttsService.js";
 import { VoiceSysInstruction } from "./services/voiceInstructions.js";
 import { json } from "stream/consumers";
+import { createClient } from "@supabase/supabase-js";
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { TaskType } from "@google/generative-ai";
+import { VectorStore } from "@langchain/core/vectorstores";
+import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 
 
 
@@ -34,7 +39,7 @@ app.get("/api/get-agent-token", async (req, res) => {
   try {
     const response = await fetch(url, options)
     const data = await response.json();
-    console.log("key data", data);
+    
 
     return res.json({
       key: data.access_token,
@@ -47,16 +52,37 @@ app.get("/api/get-agent-token", async (req, res) => {
   }
 });
 
+const client = createClient(process.env.SUPABASE_PROJECT_URL, process.env.SUPABASE_API_KEY)
+
+const embeddings = new GoogleGenerativeAIEmbeddings({ // the reason we're initialising embeddings again here is because to retreieve the stored vector data from the database by matching it against the vector embedding instead of just plain english
+  modelName:'embedding-001',
+  taskType:TaskType.RETRIEVAL_QUERY,
+  apiKey:process.env.GOOGLE_API_KEY
+})
+
+const vectorStore = new SupabaseVectorStore(embeddings,
+  {
+    client,
+    tableName:"documents"
+  }
+ 
+)
+
 app.post("/api/get-voice-context", async (req, res) => {
   const survey = req.body.surveyData;
 
   try {
+    const similiarSearch = await vectorStore.similaritySearch(`${survey.techStack} interview questions of ${survey.experience} level`, 3)
+    console.log("similiar search response", similiarSearch)
+
     const instructions = await VoiceSysInstruction(survey);
-    console.log("voice context data", instructions);
+    
     return res.json({
       instructions,
     });
-  } catch (error) {}
+  } catch (error) {
+    console.log(error)
+  }
 });
 
 app.listen(port, () => {

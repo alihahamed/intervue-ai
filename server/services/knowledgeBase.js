@@ -1,7 +1,7 @@
 import {
   createClient,
   SupabaseClient,
-} from "@supabase/supabase-js/dist/index.cjs";
+} from "@supabase/supabase-js";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 import { TaskType } from "@google/generative-ai";
@@ -27,21 +27,24 @@ const interviewData = [
 
 async function knowledge() {
   const client = createClient(
+    process.env.SUPABASE_PROJECT_URL,
     process.env.SUPABASE_API_KEY,
-    process.env.SUPABASE_PROJECT_ID
+    
   );
   const apiKey = process.env.GOOGLE_API_KEY;
 
-  const embeddings = new GoogleGenerativeAIEmbeddings({
-    modelName: "embedding-005",
+  
+  try {
+    const embeddings = new GoogleGenerativeAIEmbeddings({
+    modelName: "embedding-001",
     taskType: TaskType.RETRIEVAL_DOCUMENT, // 'retrieval_document' because we tell the vector ai to store the document in the database. It organizes the vector to be findable
     apiKey: apiKey,
   });
 
   const texts = interviewData.map((t) => t.text);
   const metadatas = interviewData.map((m) => m.meta);
-  console.log("text", text);
-  console.log("meta", metaData);
+  console.log("text", texts);
+  console.log("meta", metadatas);
 
 
   // this function handles all the work to convert the text into the vector embeddings and store it into supabase (commenting so i dont get confused in the future)
@@ -56,6 +59,9 @@ async function knowledge() {
   );
 
   console.log("succesfully populated the database with the vector embeddings")
+  } catch (error) {
+    console.log("knowledge base error", error)
+  }
 }
 
-knowledge();
+knowledge()
