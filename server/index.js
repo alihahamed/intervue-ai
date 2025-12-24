@@ -72,10 +72,20 @@ app.post("/api/get-voice-context", async (req, res) => {
   const survey = req.body.surveyData;
 
   try {
-    // const similiarSearch = await vectorStore.similaritySearch(`${survey.techStack} interview questions of ${survey.experience} level`, 3)
+    const results = await vectorStore.similaritySearch(`${survey.techStack} interview questions of ${survey.experience} level`, 10) // searches 10 similiar words with the tech stack
     // console.log("similiar search response", similiarSearch)
+    const shuffled = results.sort(() => 0.5 - Math.random())
 
-    const pageContent = similiarSearch.map(s => s.pageContent)
+    const selectedDoc = shuffled.slice(0, 5) // selecting 5 random questions
+
+    const finalDocs = selectedDoc.map(
+      doc => doc.pageContent).join("\n\n")
+      
+
+    // const pageContent = similiarSearch.map(s => s.pageContent)
+    // console.log("page content", pageContent)
+
+    console.log(" RAG Context Selected (Random 5):", finalDocs, "...");
 
     const instructions = await VoiceSysInstruction(survey);
     

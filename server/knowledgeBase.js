@@ -14,11 +14,11 @@ dotenv.config();
 async function knowledge() {
   const urls = [
     {
-      url: "https://raw.githubusercontent.com/sudheerj/reactjs-interview-questions/master/README.md",
+      url: "https://raw.githubusercontent.com/greatfrontend/top-reactjs-interview-questions/main/README.md",
       topic: "react",
     },
     {
-      url: "https://raw.githubusercontent.com/sudheerj/javascript-interview-questions/master/README.md",
+      url: "https://raw.githubusercontent.com/greatfrontend/top-javascript-interview-questions/main/README.md",
       topic: "javascript/nodejs",
     },
     {
@@ -43,6 +43,7 @@ async function knowledge() {
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000, // 1000 chars per chunk
       chunkOverlap: 200,
+      separators:["###", "\n\n", "\n", " "]
     });
 
     for (const data of urls) {
@@ -53,6 +54,30 @@ async function knowledge() {
       const splitDocs = await splitter.splitDocuments(docs);
       // console.log("split docs", splitDocs);
 
+      const cleanedDocs = splitDocs.filter(doc => {
+        const content = doc.pageContent.toLowerCase();
+      
+      // If the chunk contains these phrases, it is JUNK.
+      const isJunk = 
+        content.includes("table of contents") ||
+        content.includes("back to top") ||
+        content.includes("disclaimer") ||
+        content.includes("license") ||
+        content.includes("click :star: if you like") ||
+        content.includes("i recommend this") ||
+        content.includes("practice") ||
+        content.includes("you can also find") ||
+        content.includes("| --- |") 
+        content.includes("| no. | questions|") ||
+        content.includes("explore all 100 answers") ||
+        content.includes("100 Core Python Interview Questions in 2025")
+
+        content.length < 50; // Skip tiny chunks (empty lines)
+
+      // Keep it only if it is NOT junk
+      return !isJunk;
+      })
+
       const finalDocs = splitDocs.map((doc) => {
         doc.metadata.source = data.topic;
         return doc
@@ -60,7 +85,7 @@ async function knowledge() {
       
       // this function handles all the work to convert the text into the vector embeddings and store it into supabase (commenting so i dont get confused in the future)
     await SupabaseVectorStore.fromDocuments(
-      finalDocs,
+      cleanedDocs,
       embeddings, // The Worker (The Google tool that turns Words -> Numbers)
       {
         client, // supabase database
