@@ -12,7 +12,7 @@ import { TextToSpeech } from "./services/ttsService.js";
 import { VoiceSysInstruction } from "./services/voiceInstructions.js";
 import { json } from "stream/consumers";
 
-import { createClient } from "@deepgram/sdk";
+
 
 const app = express();
 app.use(cors());
@@ -20,7 +20,6 @@ app.use(express.json());
 
 const port = 3021;
 
-const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
 
 app.get("/api/get-agent-token", async (req, res) => {
   const url = "https://api.deepgram.com/v1/auth/grant";

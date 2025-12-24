@@ -339,6 +339,7 @@ function ChatConversation() {
       setConnectionStatus("connecting");
       setCallEnd(false);
       console.log(" Starting Agent Connection...");
+      console.log(callEnd)
 
       // A. Fetch Config
       const [instructionsResponse, tokenResponse] = await Promise.all([
@@ -497,7 +498,7 @@ function ChatConversation() {
             <div className="flex h-full flex-col z-10 relative w-full">
               <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
                 <ConversationContent className="p-2 md:p-4 space-y-4">
-                  {message.length === 0 ? (
+                  {callEnd ? (
                     <ConversationEmptyState
                       icon={<Orb className="size-25" agentState="listening" />}
                       title="Are You Ready?"
