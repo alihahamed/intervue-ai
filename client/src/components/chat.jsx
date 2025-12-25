@@ -5,7 +5,7 @@ import {
   ConversationScrollButton,
 } from "@/components/ui/conversation";
 import { useChat } from "../createContext";
-import { useState, useRef, useEffect, useCallback, useMemo} from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import React from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -24,18 +24,21 @@ import { HoverBorderGradient } from "./ui/hover-border-gradient";
 import { Button } from "./ui/moving-border";
 import FloatingLines from "./ui/FloatingLines";
 import { Mic, MicOff } from "lucide-react";
+import ghost from "../assets/ghost.png";
+import PillNav from "./ui/PillNav";
 
 const InterviewBackground = React.memo(() => {
   return (
     <div className="absolute inset-0 z-0">
       <FloatingLines
-        enabledWaves={["top", "middle", "bottom"]}
+        enabledWaves={["middle", "bottom"]}
         lineCount={[10, 15, 20]}
         lineDistance={[8, 6, 4]}
-        bendRadius={5.0}
-        bendStrength={-0.5}
+        bendRadius={8.0}
+        bendStrength={-1}
         interactive={true}
-        parallax={true}
+        parallax={false}
+        linesGradient={["#0f172a", "#1e293b", "#334155", "#0f172a"]}
       />
     </div>
   );
@@ -64,6 +67,8 @@ function ChatConversation() {
   const splitRef = useRef(null);
   const tlRef = useRef(null);
   const tlBtn = useRef(null);
+  const callContainerRef = useRef(null);
+  const buttonRef = useRef(null);
 
   // component mount animation when page loads
   useGSAP(() => {
@@ -215,26 +220,39 @@ function ChatConversation() {
         y: 40, // Start lower
         scale: 0.75, // Start slightly smaller
         opacity: 0,
-        filter: "blur(10px)", // The "Premium" blur effect
+        filter: "blur(10px)",
       },
       {
         y: 0,
         scale: 1,
         opacity: 1,
-        filter: "blur(0px)", // Focus in
+        filter: "blur(0px)",
         duration: 1.4,
-        ease: "power4.out", // Very smooth easing
+        ease: "power4.out",
         clearProps: "all", // Clean up afterwards
       },
       "-=0.4" // Start overlapping slightly with the text exit
     );
   }, [survey.isCompleted]);
 
+  const [callEnd, setCallEnd] = useState(true);
+
+  useGSAP(
+    () => {
+      gsap.fromTo(
+        buttonRef.current,
+        { scale: 0, opacity: 0, y: 20 },
+        { scale: 1, opacity: 1, y: 0, duration: 1, ease: "back.out(1.7)" }
+      );
+    },
+    { dependencies: [callEnd], scope: callContainerRef }
+  );
+
   // voice call refs and states
 
   const [connectionStatus, setConnectionStatus] = useState("idle");
   const [orbState, setOrbState] = useState("listening");
-  const [callEnd, setCallEnd] = useState(true);
+
   const [isMuted, setIsMuted] = useState(true);
   const socketRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -259,7 +277,7 @@ function ChatConversation() {
     const audioCtx = audioContextRef.current;
 
     if (audioCtx.state === "suspended") {
-        await audioCtx.resume();
+      await audioCtx.resume();
     }
 
     // 1. Read the Raw Int16 bytes
@@ -324,7 +342,7 @@ function ChatConversation() {
     }
 
     nextStartTimeRef.current = 0;
-    
+
     setConnectionStatus("idle");
     setOrbState("listening");
 
@@ -339,7 +357,7 @@ function ChatConversation() {
       setConnectionStatus("connecting");
       setCallEnd(false);
       console.log(" Starting Agent Connection...");
-      console.log(callEnd)
+      console.log(callEnd);
 
       // A. Fetch Config
       const [instructionsResponse, tokenResponse] = await Promise.all([
@@ -362,7 +380,6 @@ function ChatConversation() {
           role: m.sender === "user" ? "user" : "assistant",
           content: typeof m.text === "string" ? m.text : JSON.stringify(m.text),
         }));
-        
 
       if (!isMounted) return;
 
@@ -383,7 +400,7 @@ function ChatConversation() {
         if (!isMounted) return;
         console.log("✅ WebSocket Open!");
         setConnectionStatus("active");
-        console.log("history", historyMessages)
+        console.log("history", historyMessages);
 
         // 1. Get Mic Stream FIRST to know the Sample Rate
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -461,10 +478,10 @@ function ChatConversation() {
           playAudio(message.data);
           setOrbState("talking");
           // console.log("blob data", message.data)
-          console.log(orbState)
+          console.log(orbState);
         } else {
           const event = JSON.parse(message.data);
-          console.log("event", event)
+          console.log("event", event);
           if (event.type === "Error") console.error("DEEPGRAM ERROR:", event);
 
           if (event.type === "ConversationText") {
@@ -485,16 +502,13 @@ function ChatConversation() {
 
   // show the interview interface if survey is completed
 
-  
-
   if (survey.isCompleted) {
     return (
       // 1. MAIN CONTAINER: Full Screen & Relative
-      <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center">    
+      <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center pb-20">
         <InterviewBackground />
         <div className="relative z-10 w-full flex items-center justify-center px-4 pointer-events-none">
-          
-          <Card className="chat-card-container pointer-events-auto w-[60vw] max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+          <Card className="chat-card-container pointer-events-auto w-full max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
             <div className="flex h-full flex-col z-10 relative w-full">
               <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
                 <ConversationContent className="p-2 md:p-4 space-y-4">
@@ -505,59 +519,25 @@ function ChatConversation() {
                       description="Start the Call to see the messages here"
                     />
                   ) : (
-                    // message.map((msg, index) => {
-                      
-                    //   const isUser = msg.sender === "user";
-                    //   const textContent = isUser ? msg.text : msg.text;
-                    //   const grade = !isUser ? msg.text.grade : undefined;
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-10 w-full max-w-5xl mx-auto">
+                        {/* CARD 1 */}
+                        <div className="border border-zinc-700 rounded-xl bg-zinc-900/50 flex justify-center items-center aspect-video overflow-hidden shadow-lg">
+                          <Orb
+                            className="w-full h-[85%] object-cover"
+                            agentState={orbState}
+                          />
+                        </div>
 
-                    //   return (
-                        // <Message
-                        //   key={msg.id || index}
-                        //   from={isUser ? "user" : "assistant"}
-                        //   className={`flex w-full gap-2 md:gap-3 items-start py-1 md:py-2 ${
-                        //     isUser ? "justify-end" : "justify-start"
-                        //   }`}
-                        // >
-                        //   {/* AVATAR */}
-                        //   {!isUser && (
-                        //     <div className="ring-border size-6 md:size-8 overflow-hidden rounded-full ring-1 flex-shrink-0 mt-1 bg-black">
-                        //       <Orb
-                        //         className="h-full w-full"
-                        //         agentState="talking"
-                        //       />
-                        //     </div>
-                        //   )}
-
-                        //   {/* BUBBLE CONTENT */}
-                        //   <MessageContent
-                        //     className={cn(
-                        //       "relative flex flex-col gap-3 rounded-2xl px-4 py-3 text-sm shadow-sm",
-                        //       "w-fit max-w-[90%] md:max-w-[85%] whitespace-pre-wrap break-words",
-                        //       isUser
-                        //         ? "bg-white text-black rounded-br-none ml-auto"
-                        //         : "bg-[#27272a] text-white rounded-tl-none mr-auto overflow-visible"
-                        //     )}
-                        //   >
-                        //     {!isUser && grade !== undefined && (
-                        //       <GradeBadge grade={grade} />
-                        //     )}
-
-                        //     {/* TEXT */}
-                        //     <div>
-                        //       {!isUser ? (
-                        //         <TextGenerateEffect words={textContent} />
-                        //       ) : (
-                        //         textContent
-                        //       )}
-                        //     </div>
-                        //   </MessageContent>
-                        // </Message>
-                        <>
-                        <Orb className="flex justify-center items-center h-full w-full text-center size-full" agentState={orbState} />
-                        </>
-                    //   );
-                    // })
+                        {/* CARD 2 */}
+                        <div className="border border-zinc-700 rounded-xl bg-zinc-900/50 flex justify-center items-center aspect-video overflow-hidden shadow-lg">
+                          {/* <Orb
+                          className="w-full h-[100px] object-cover"
+                          agentState={orbState}
+                        /> */}
+                        </div>
+                      </div>
+                    </>
                   )}
                 </ConversationContent>
                 <ConversationScrollButton />
@@ -582,8 +562,10 @@ function ChatConversation() {
                     </div>
                     <span className="text-zinc-400 text-sm font-medium">
                       {connectionStatus === "idle"
-                        ? "Idle" 
-                        : connectionStatus === "active" ? "Listening..." : "Connecting..."}
+                        ? "Idle"
+                        : connectionStatus === "active"
+                        ? "Listening..."
+                        : "Connecting..."}
                     </span>
                   </div>
 
@@ -606,27 +588,44 @@ function ChatConversation() {
                       )}
                     </button>
 
-                    {!callEnd ? (
-                      <button
-                        onClick={endCall}
-                        className="px-5 py-2.5 bg-red-500 text-black text-sm font-medium rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg shadow-red-500/25"
-                      >
-                        End Call
-                      </button>
-                    ) : (
-                      <button
-                        onClick={startAgent}
-                        className="px-5 py-2.5 bg-emerald-500 text-black text-sm font-medium rounded-full hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
-                      >
-                        Start Call
-                      </button>
-                    )}
+                    <div
+                      ref={callContainerRef}
+                      className="relative flex justify-between"
+                    >
+                      {!callEnd ? (
+                        <button
+                          onClick={endCall}
+                          ref={buttonRef}
+                          className="end-btn px-5 py-2.5 bg-red-500 text-black text-sm font-medium rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg shadow-red-500/25"
+                        >
+                          End Call
+                        </button>
+                      ) : (
+                        <button
+                          onClick={startAgent}
+                          ref={buttonRef}
+                          className="start-btn px-5 py-2.5 bg-emerald-500 text-black text-sm font-medium rounded-full hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
+                        >
+                          Start Call
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </Card>
         </div>
+        <PillNav
+          logo={ghost}
+          items={[{ label: "Reset Interview", href: "/" }]}
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50"
+          ease="power2.easeOut"
+          baseColor="white"
+          pillColor="black"
+          hoveredPillTextColor="black"
+          pillTextColor="white"
+        />
       </div>
     );
   }
@@ -703,6 +702,16 @@ function ChatConversation() {
           </div>
         </Button>
       </div>
+      <PillNav
+        logo={ghost}
+        items={[{ label: "How It Works", href: "/" }]}
+        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50"
+        ease="power2.easeOut"
+        baseColor="white"
+        pillColor="black"
+        hoveredPillTextColor="black"
+        pillTextColor="white"
+      />
     </WavyBackground>
   );
 }

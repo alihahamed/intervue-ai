@@ -11,9 +11,9 @@ export const ChatProvider = ({ children }) => {
 
     return surveyData ? JSON.parse(surveyData)  : { // unpacks the survey to use the items inside
       userName: "Ali",
-      experience: "No Experience",
-      techStack: "React, Nodejs",
-      targetRole: "Frontend Developer",
+      experience: "",
+      techStack: "",
+      targetRole: "",
       isCompleted: false
     }
   })
