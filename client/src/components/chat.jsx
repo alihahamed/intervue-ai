@@ -44,8 +44,41 @@ const InterviewBackground = React.memo(() => {
   );
 });
 
+const CallNav = React.memo(() => {
+  return (
+    <PillNav
+          logo={ghost}
+          items={[{ label: "Reset Interview", href: "/" }]}
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 call-nav"
+          ease="power2.easeOut"
+          baseColor="white"
+          pillColor="black"
+          hoveredPillTextColor="black"
+          pillTextColor="white"
+        />
+  )
+})
+
+const HomeNav = React.memo(() => {
+  return (
+    <PillNav
+          logo={ghost}
+          items={[{ label: "How It Works", href: "/" }]}
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 home-nav"
+          ease="power2.easeOut"
+          baseColor="white"
+          pillColor="black"
+          hoveredPillTextColor="black"
+          pillTextColor="white"
+        />
+  )
+})
+
+
 // Give it a display name for debugging
 InterviewBackground.displayName = "InterviewBackground";
+CallNav.displayName = "CallNav"
+HomeNav.displayName = "HomeNav"
 
 function ChatConversation() {
   const {
@@ -71,6 +104,8 @@ function ChatConversation() {
   const buttonRef = useRef(null);
 
   // component mount animation when page loads
+
+
   useGSAP(() => {
     const heroSplit = new SplitText(".heroText span", {
       type: "chars,  words",
@@ -616,16 +651,7 @@ function ChatConversation() {
             </div>
           </Card>
         </div>
-        <PillNav
-          logo={ghost}
-          items={[{ label: "Reset Interview", href: "/" }]}
-          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50"
-          ease="power2.easeOut"
-          baseColor="white"
-          pillColor="black"
-          hoveredPillTextColor="black"
-          pillTextColor="white"
-        />
+        <CallNav />
       </div>
     );
   }
@@ -702,16 +728,7 @@ function ChatConversation() {
           </div>
         </Button>
       </div>
-      <PillNav
-        logo={ghost}
-        items={[{ label: "How It Works", href: "/" }]}
-        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50"
-        ease="power2.easeOut"
-        baseColor="white"
-        pillColor="black"
-        hoveredPillTextColor="black"
-        pillTextColor="white"
-      />
+      <HomeNav />
     </WavyBackground>
   );
 }
