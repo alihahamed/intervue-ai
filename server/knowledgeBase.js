@@ -22,33 +22,40 @@ async function knowledge() {
   const ai = new GoogleGenAI({apiKey:apiKey});
 
   const TARGETS = [
-    { role: "Frontend Developer", stack: "React", count: 10 },
-    { role: "Frontend Developer", stack: "Vue", count: 10 },
-    { role: "Backend Developer", stack: "Node.js", count: 10 },
-    { role: "Backend Developer", stack: "Django", count: 10 },
-    { role: "Devops Engineer", stack: "Docker", count: 10 },
-    { role: "UI/UX", stack: "Figma", count: 10 },
-    { role:"Fullstack Developer", stack:"MERN", count:10}
+    { role: "Frontend Developer", stack: "React", count: 25 },
+    { role: "Frontend Developer", stack: "Vue", count: 25 },
+    { role: "Backend Developer", stack: "Node.js", count: 25 },
+    { role: "Backend Developer", stack: "Django", count: 25 },
+    { role: "Devops Engineer", stack: "Docker", count: 25 },
+    { role: "UI/UX", stack: "Figma", count: 25},
+    { role:"Fullstack Developer", stack:"MERN", count:25}
   ];
 
   for (const target of TARGETS) { // the reason we're running a for each loop here is because we wanna run this function for each of the target in the targets list
    const prompt = `
       Generate ${target.count} interview questions and answers for a ${target.role} developer specializing in ${target.stack}.
 
-      CRITICAL INSTRUCTION: You MUST provide an even spread of difficulties. 
-      - Ensure at least 3 questions are strictly labeled "No Experience".
-      - Ensure the rest are a mix of "Junior", "Mid", and "Senior".
-      
+      CRITICAL DISTRIBUTION INSTRUCTIONS:
+      1. **No Experience (at least 3 questions)**: Focus on general aptitude, logic puzzles, or very basic CS fundamentals (e.g. "How does the internet work?", "Explain a variable to a 5-year-old").
+      2. **Junior (approx 30%)**: Standard "textbook" questions are allowed here (e.g., "What is React?", "Explain the difference between let and var").
+      3. **Mid-Level (approx 40%)**: Focus on practical implementation, debugging scenarios, and deeper "How does it work under the hood" questions.
+      4. **Senior (approx 20%)**: Focus on System Design, Architecture, Security, and Optimization at scale.
+
+      CONTENT GUIDELINES:
+      - **Generic Questions are OK:** It is acceptable to include standard interview questions (e.g. "Define the Virtual DOM"), as these are common in real interviews.
+      - **Scenario Questions:** Mix in questions like "How would you handle X situation?" alongside the generic ones.
+      - Answers must be detailed and technically accurate.
+
       Format the output strictly as a JSON Array of objects with this structure:
       [
         {
-          "content": "Q: [Question here]\nA: [Detailed Answer here]",
+          "content": "Q: [Question here]\\nA: [Detailed Answer here]",
           "topic": "[Specific concept, e.g. Event Loop]",
           "difficulty": "No Experience" | "Junior" | "Mid" | "Senior"
         }
       ]
       Do not add markdown formatting like \`\`\`json. Just raw JSON.
-      `;
+    `;
 
       
 
