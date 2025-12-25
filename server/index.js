@@ -17,29 +17,28 @@ import { TaskType } from "@google/generative-ai";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 
-
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const port = 3021;
 
-
 app.get("/api/get-agent-token", async (req, res) => {
   const url = "https://api.deepgram.com/v1/auth/grant";
   const options = {
     method: "POST",
-    headers: { Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`,
+      "Content-Type": "application/json",
+    },
     body: {
-      ttl_seconds:300
+      ttl_seconds: 300,
     },
   };
 
   try {
-    const response = await fetch(url, options)
+    const response = await fetch(url, options);
     const data = await response.json();
-    
 
     return res.json({
       key: data.access_token,
@@ -52,35 +51,44 @@ app.get("/api/get-agent-token", async (req, res) => {
   }
 });
 
-const client = createClient(process.env.SUPABASE_PROJECT_URL, process.env.SUPABASE_API_KEY)
+const client = createClient(
+  process.env.SUPABASE_PROJECT_URL,
+  process.env.SUPABASE_API_KEY
+);
 
-const embeddings = new GoogleGenerativeAIEmbeddings({ // the reason we're initialising embeddings again here is because to retreieve the stored vector data from the database by matching it against the vector embedding instead of just plain english
-  modelName:'text-embedding-004',
-  taskType:TaskType.RETRIEVAL_QUERY,
-  apiKey:process.env.GOOGLE_API_KEY
-})
+const embeddings = new GoogleGenerativeAIEmbeddings({
+  // the reason we're initialising embeddings again here is because to retreieve the stored vector data from the database by matching it against the vector embedding instead of just plain english
+  modelName: "text-embedding-004",
+  taskType: TaskType.RETRIEVAL_QUERY,
+  apiKey: process.env.GOOGLE_API_KEY,
+});
 
-const vectorStore = new SupabaseVectorStore(embeddings,
-  {
-    client,
-    tableName:"documents"
-  }
- 
-)
+const vectorStore = new SupabaseVectorStore(embeddings, {
+  client,
+  tableName: "documents",
+});
 
 app.post("/api/get-voice-context", async (req, res) => {
   const survey = req.body.surveyData;
 
   try {
-    const results = await vectorStore.similaritySearch(`${survey.techStack} interview questions of ${survey.experience} level`, 10) // searches 10 similiar words with the tech stack
+    const results = await vectorStore.similaritySearch(
+      `${survey.techStack} interview questions for ${survey.targetRole}`, // what to search for based on the keywords
+      10, // 10 similiar questions
+      {
+        // only look in this specific pile
+        stack: survey.techStack,
+        difficulty: survey.experience,
+      }
+    ); 
+
     // console.log("similiar search response", similiarSearch)
-    const shuffled = results.sort(() => 0.5 - Math.random())
 
-    const selectedDoc = shuffled.slice(0, 5) // selecting 5 random questions
+    const shuffled = results.sort(() => 0.5 - Math.random());
 
-    const finalDocs = selectedDoc.map(
-      doc => doc.pageContent).join("\n\n")
-      
+    const selectedDoc = shuffled.slice(0, 5); // selecting 5 random questions
+
+    const finalDocs = selectedDoc.map((doc) => doc.pageContent).join("\n\n");
 
     // const pageContent = similiarSearch.map(s => s.pageContent)
     // console.log("page content", pageContent)
@@ -88,12 +96,12 @@ app.post("/api/get-voice-context", async (req, res) => {
     console.log(" RAG Context Selected (Random 5):", finalDocs, "...");
 
     const instructions = await VoiceSysInstruction(survey);
-    
+
     return res.json({
       instructions,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 });
 

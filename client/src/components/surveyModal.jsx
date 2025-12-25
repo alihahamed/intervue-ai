@@ -25,24 +25,22 @@ function SurveyModal() {
 
   useEffect(() => {
     if (currentStep === 2 && expRef.current) expRef.current.focus();
-    if (currentStep === 3 && stackRef.current) stackRef.current.focus();
-    if (currentStep === 4 && targetRef.current) targetRef.current.focus();
+    if (currentStep === 3 && targetRef.current) targetRef.current.focus();
+    if (currentStep === 4 && stackRef.current) stackRef.current.focus();
   }, [currentStep]);
 
   const handleKeyDown = (e, step) => {
     if (e.key === "Enter") {
       if (step === 1 && !survey.userName) return;
       if (step === 2 && !survey.experience) return;
-      if (step === 3 && !survey.techStack) return;
-      if (step === 4 && !survey.targetRole) return;
+      if (step === 3 && !survey.targetRole) return;
+      if (step === 4 && !survey.techStack) return;
 
       if (step === 4) {
         handleExit();
       } else {
         setCurrentStep((prev) => prev + 1);
       }
-
-      
     }
   };
 
@@ -61,7 +59,6 @@ function SurveyModal() {
         yPercent: 100,
         duration: 0.6,
         ease: "power3.out",
-        
       },
       "-=0.4"
     );
@@ -79,16 +76,15 @@ function SurveyModal() {
       opacity: 0,
       duration: 0.3,
       ease: "power3.in",
-      yPercent:-100
-    })
-    .to(
+      yPercent: -100,
+    }).to(
       ".banner-col",
       {
-        yPercent: 100, 
+        yPercent: 100,
         duration: 0.7,
         stagger: {
           each: 0.2,
-          from: "end", 
+          from: "end",
         },
         ease: "power3.inOut",
       },
@@ -98,6 +94,15 @@ function SurveyModal() {
 
   const inputStyles =
     "w-full bg-transparent border-0 border-b-2 border-zinc-700 rounded-none text-black text-lg md:text-xl py-2 px-0 h-auto focus:border-black focus-visible:ring-0 focus-visible:ring-offset-0 transition-colors placeholder:text-zinc-700";
+
+  const ROLE_OPTIONS = {
+    "Frontend Developer": ["React", "Vue", "Next.js"],
+    "Backend Developer": ["Node.js", "Django"],
+    "Devops Engineer": ["AWS", "Docker"],
+    "Fullstack Developer": ["MERN"],
+    "UI/UX Designer": ["Figma"],
+  };  
+
 
   return (
     <>
@@ -209,47 +214,65 @@ function SurveyModal() {
                   {currentStep >= 3 && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
                       <label className="text-xs text-cyan-600 uppercase tracking-wider ml-1">
-                        Tech Stack
+                        Target Role?
                       </label>
-                      <Input
-                        ref={stackRef}
-                        type="text"
-                        value={survey.techStack}
-                        onChange={(e) =>
-                          setSurvey({ ...survey, techStack: e.target.value })
-                        }
-                        onKeyDown={(e) => handleKeyDown(e, 3)}
-                        placeholder="React, Node, AWS..."
-                        className={inputStyles}
-                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        {Object.keys(ROLE_OPTIONS).map((role) => (
+                          <button
+                            key={role}
+                            ref={targetRef}
+                            className={`p-3 text-sm font-medium border rounded-md transition-all duration-200 text-left
+                            ${
+                              survey.targetRole === role
+                                ? "bg-red-600 border-red-600 text-white" // Selected Style
+                                : "bg-transparent border-zinc-700 text-zinc-400 hover:border-red-500 hover:text-red-400" // Default Style
+                            }
+                          `}
+                            onKeyDown={(e) => handleKeyDown(e, 3)}
+                            onClick={() =>
+                              setSurvey({
+                                ...survey,
+                                targetRole: role,
+                                techStack: "",
+                              })
+                            }
+                          >
+                            {role}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
                   {/* QUESTION 04 */}
-                  {currentStep >= 4 && (
+                  {currentStep >= 4 && survey.targetRole && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
                       <label className="text-xs text-red-600 uppercase tracking-wider ml-1">
-                        Target Role?
+                        Tech Stack?
                       </label>
-                      <Input
-                        ref={targetRef}
-                        type="text"
-                        list="roles-list"
-                        value={survey.targetRole}
-                        onChange={(e) =>
-                          setSurvey({ ...survey, targetRole: e.target.value })
-                        }
-                        onKeyDown={(e) => handleKeyDown(e, 4)}
-                        readOnly={currentStep > 4}
-                        placeholder="e.g. Senior Frontend Engineer..."
-                        className={inputStyles}
-                      />
-                      <datalist id="roles-list">
-                        <option value="Frontend Developer" />
-                        <option value="Senior Frontend Engineer" />
-                        <option value="Full Stack Developer" />
-                        <option value="Backend Architect" />
-                      </datalist>
+                      <div className="flex flex-wrap gap-2">
+                        {(ROLE_OPTIONS[survey.targetRole] || []).map(
+                          (stack) => (
+                            <button
+                              key={stack}
+                              ref={stackRef}
+                              onKeyDown={(e) => handleKeyDown(e, 4)}
+                              onClick={() =>
+                                setSurvey({ ...survey, techStack: stack })
+                              }
+                              className={`px-4 py-2 text-sm rounded-full border transition-all
+                              ${
+                                survey.techStack === stack
+                                  ? "bg-cyan-600 border-cyan-600 text-white shadow-[0_0_15px_rgba(8,145,178,0.5)]"
+                                  : "bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-cyan-500"
+                              }
+                            `}
+                            >
+                              {stack}
+                            </button>
+                          )
+                        )}
+                      </div>
                     </div>
                   )}
 
