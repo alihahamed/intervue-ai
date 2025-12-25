@@ -34,13 +34,17 @@ async function knowledge() {
   for (const target of TARGETS) { // the reason we're running a for each loop here is because we wanna run this function for each of the target in the targets list
    const prompt = `
       Generate ${target.count} interview questions and answers for a ${target.role} developer specializing in ${target.stack}.
+
+      CRITICAL INSTRUCTION: You MUST provide an even spread of difficulties. 
+      - Ensure at least 3 questions are strictly labeled "No Experience".
+      - Ensure the rest are a mix of "Junior", "Mid", and "Senior".
       
       Format the output strictly as a JSON Array of objects with this structure:
       [
         {
           "content": "Q: [Question here]\nA: [Detailed Answer here]",
           "topic": "[Specific concept, e.g. Event Loop]",
-          "difficulty": "No Experience" |"Junior" | "Mid" | "Senior"
+          "difficulty": "No Experience" | "Junior" | "Mid" | "Senior"
         }
       ]
       Do not add markdown formatting like \`\`\`json. Just raw JSON.
@@ -82,7 +86,7 @@ async function knowledge() {
 
     const documents = cleanData.map((c) => ({
       pageContent:c.content,
-      metaData: {
+      metadata: {
         topic:c.topic,
         stack:target.stack,
         role:target.role,
@@ -92,26 +96,26 @@ async function knowledge() {
     console.log(documents)
     
 
-    // const embeddings = new GoogleGenerativeAIEmbeddings({
-    //   modelName: "text-embedding-004",
-    //   taskType: TaskType.RETRIEVAL_DOCUMENT, // 'retrieval_document' because we tell the vector ai to store the document in the database. It organizes the vector to be findable
-    //   apiKey: apiKey,
-    // });
+    const embeddings = new GoogleGenerativeAIEmbeddings({
+      modelName: "text-embedding-004",
+      taskType: TaskType.RETRIEVAL_DOCUMENT, // 'retrieval_document' because we tell the vector ai to store the document in the database. It organizes the vector to be findable
+      apiKey: apiKey,
+    });
 
-    // // this function handles all the work to convert the text into the vector embeddings and store it into supabase (commenting so i dont get confused in the future)
-    // await SupabaseVectorStore.fromDocuments(
-    //   cleanData, // our q/a cheat-sheet
-    //   embeddings, // The Worker (The Google tool that turns Words -> Numbers)
-    //   {
-    //     client, // supabase database
-    //     tableName: "documents", // database name
-    //   }
-    // );
+    // this function handles all the work to convert the text into the vector embeddings and store it into supabase (commenting so i dont get confused in the future)
+    await SupabaseVectorStore.fromDocuments(
+      documents, // our q/a cheat-sheet
+      embeddings, // The Worker (The Google tool that turns Words -> Numbers)
+      {
+        client, // supabase database
+        tableName: "documents", // database name
+      }
+    );
 
     
-    // console.log(
-    //   "succesfully populated the database with the vector embeddings"
-    // );
+    console.log(
+      "succesfully populated the database with the vector embeddings"
+    );
  
     // console.log("data", cleanData)
     } catch (error) {
