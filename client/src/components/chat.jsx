@@ -5,7 +5,7 @@ import {
   ConversationScrollButton,
 } from "@/components/ui/conversation";
 import { useChat } from "../createContext";
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, useContext } from "react";
 import React from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -47,38 +47,37 @@ const InterviewBackground = React.memo(() => {
 const CallNav = React.memo(() => {
   return (
     <PillNav
-          logo={ghost}
-          items={[{ label: "Reset Interview", href: "/" }]}
-          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 call-nav"
-          ease="power2.easeOut"
-          baseColor="white"
-          pillColor="black"
-          hoveredPillTextColor="black"
-          pillTextColor="white"
-        />
-  )
-})
+      logo={ghost}
+      items={[{ label: "Reset Interview", href: "/" }]}
+      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 call-nav"
+      ease="power2.easeOut"
+      baseColor="white"
+      pillColor="black"
+      hoveredPillTextColor="black"
+      pillTextColor="white"
+    />
+  );
+});
 
 const HomeNav = React.memo(() => {
   return (
     <PillNav
-          logo={ghost}
-          items={[{ label: "How It Works", href: "/" }]}
-          className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 home-nav"
-          ease="power2.easeOut"
-          baseColor="white"
-          pillColor="black"
-          hoveredPillTextColor="black"
-          pillTextColor="white"
-        />
-  )
-})
-
+      logo={ghost}
+      items={[{ label: "How It Works", href: "/" }]}
+      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 home-nav"
+      ease="power2.easeOut"
+      baseColor="white"
+      pillColor="black"
+      hoveredPillTextColor="black"
+      pillTextColor="white"
+    />
+  );
+});
 
 // Give it a display name for debugging
 InterviewBackground.displayName = "InterviewBackground";
-CallNav.displayName = "CallNav"
-HomeNav.displayName = "HomeNav"
+CallNav.displayName = "CallNav";
+HomeNav.displayName = "HomeNav";
 
 function ChatConversation() {
   const {
@@ -104,7 +103,6 @@ function ChatConversation() {
   const buttonRef = useRef(null);
 
   // component mount animation when page loads
-
 
   useGSAP(() => {
     const heroSplit = new SplitText(".heroText span", {
@@ -252,27 +250,29 @@ function ChatConversation() {
     tl.fromTo(
       ".chat-card-container",
       {
-        y: 40, // Start lower
-        scale: 0.75, // Start slightly smaller
+        y: 60, // Start lower
+        scale: 0.55, // Start slightly smaller
         opacity: 0,
         filter: "blur(10px)",
       },
       {
         y: 0,
         scale: 1,
-        opacity: 1,
+        opacity: 1.1,
         filter: "blur(0px)",
-        duration: 1.4,
-        ease: "power4.out",
+        duration: 1,
+        ease: "power4.Out",
         clearProps: "all", // Clean up afterwards
       },
       "-=0.4" // Start overlapping slightly with the text exit
     );
   }, [survey.isCompleted]);
 
+  // gsap animations for call control buttons
+
   const [callEnd, setCallEnd] = useState(true);
 
-  useGSAP(
+  const { contextSafe } = useGSAP(
     () => {
       gsap.fromTo(
         buttonRef.current,
@@ -283,6 +283,9 @@ function ChatConversation() {
     { dependencies: [callEnd], scope: callContainerRef }
   );
 
+ const onEnter = contextSafe(() => {
+
+ })
   // voice call refs and states
 
   const [connectionStatus, setConnectionStatus] = useState("idle");
@@ -552,6 +555,7 @@ function ChatConversation() {
                       icon={<Orb className="size-25" agentState="listening" />}
                       title="Are You Ready?"
                       description="Start the Call to see the messages here"
+                      className="flex justify-center items-center"
                     />
                   ) : (
                     <>
@@ -651,7 +655,7 @@ function ChatConversation() {
             </div>
           </Card>
         </div>
-        <CallNav />
+        {!callEnd && <CallNav />}
       </div>
     );
   }
