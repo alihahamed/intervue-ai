@@ -83,7 +83,7 @@ app.post("/api/get-voice-context", async (req, res) => {
       }
     ); 
 
-    console.log(results)
+    
 
     const shuffled = results.sort(() => 0.5 - Math.random());
 

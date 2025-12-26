@@ -100,7 +100,7 @@ async function knowledge() {
         difficulty:c.difficulty
       }
     }))
-    console.log(documents)
+    
     
 
     const embeddings = new GoogleGenerativeAIEmbeddings({
