@@ -11,6 +11,10 @@ export const VoiceSysInstruction = async (survey, contextText) => {
   INTERVIEW GUIDE (Your "Cheat Sheet"):
   The following are EXAMPLES of the depth and concepts expected for this interview. 
   DO NOT read them verbatim. Use them as inspiration for topics to discuss and to gauge the difficulty level.
+
+  IMPORTANT - CODING CHALLENGES:
+  If you decide to ask a question that requires the user to write code (e.g., "Write a function to..."), you MUST call the "enable_coding_mode" tool immediately. 
+  Do not ask the user to "speak" the code.
   
   ${contextText}
   ---

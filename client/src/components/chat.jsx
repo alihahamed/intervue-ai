@@ -286,6 +286,7 @@ function ChatConversation() {
  const onEnter = contextSafe(() => {
 
  })
+
   // voice call refs and states
 
   const [connectionStatus, setConnectionStatus] = useState("idle");
@@ -297,6 +298,7 @@ function ChatConversation() {
   const audioContextRef = useRef(null);
   const processorRef = useRef(null);
   const nextStartTimeRef = useRef(null);
+  const [codingMode, setCodingMode] = useState(false)
 
   // FIX: Track messages in a Ref so we can read them without re-triggering effects
   const messagesRef = useRef(message);
@@ -421,7 +423,7 @@ function ChatConversation() {
 
       if (!isMounted) return;
 
-      // C. Connect WebSocket
+      // creating a websocket connection (socketRef)
       socketRef.current = new WebSocket(
         "wss://agent.deepgram.com/v1/agent/converse",
         ["bearer", key]
@@ -470,7 +472,17 @@ function ChatConversation() {
             think: {
               provider: { type: "open_ai", model: "gpt-4o-mini" },
               prompt: instructions,
-            },
+              functions:[
+                {
+                  name:"enable_coding_mode",
+                  description:"Call this Function when you ask a coding question that requires the user to write code.",
+                  parameters:{
+                    type:"object",
+                    properties:{}
+                  }
+                }
+              ]
+            }, 
             speak: {
               provider: { type: "deepgram", model: "aura-2-thalia-en" },
             },
@@ -511,15 +523,36 @@ function ChatConversation() {
       };
 
       // F. Handle Messages
-      socketRef.current.onmessage = async (message) => {
+      socketRef.current.onmessage = async (message) => { // 'message' is the Event Object from the browser, 'message.data' is the actual payload from deepgram (writing so i dont get confused later)
         if (message.data instanceof Blob) {
           playAudio(message.data);
           setOrbState("talking");
           // console.log("blob data", message.data)
           console.log(orbState);
+          
         } else {
           const event = JSON.parse(message.data);
           console.log("event", event);
+
+          if(event.type === "FunctionCallRequest") {
+            const call = event.functions[0]
+            // console.log("name", call.name)
+            // console.log("id", call.id)
+
+            if(call.name === "enable_coding_mode") {
+              setCodingMode(true)
+
+              const response = {
+                type:"FunctionCallResponse",
+                id:call.id,
+                name:call.name,
+                content:"Coding mode enabled. The user is now seeing the code box."
+              }
+              // console.log("function response", JSON.stringify(response))
+              socketRef.current.send(JSON.stringify(response))
+            }
+          }
+
           if (event.type === "Error") console.error("DEEPGRAM ERROR:", event);
 
           if (event.type === "ConversationText") {
@@ -527,7 +560,7 @@ function ChatConversation() {
               event.role === "user" ? "user" : "assistant",
               event.content
             );
-            console.log("text daata", event.content);
+            // console.log("text daata", event.content);
           }
           if (event.type === "UserStartedSpeaking") setOrbState("listening");
         }
@@ -537,6 +570,19 @@ function ChatConversation() {
       if (isMounted) setConnectionStatus("error");
     }
   };
+
+  const handleCodeSubmit = (codeSnippet) => {
+    if(connectionStatus === "active") {
+      const response = {
+        type:"ConversationText",
+        role:"user",
+        content:`Here is the code i wrote:\n ${codeSnippet}`
+      }
+
+      console.log("code submit response", response)
+      socketRef.current.send(JSON.stringify(response))
+    }
+  }
 
   // show the interview interface if survey is completed
 
