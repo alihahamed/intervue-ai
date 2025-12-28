@@ -5,7 +5,14 @@ import {
   ConversationScrollButton,
 } from "@/components/ui/conversation";
 import { useChat } from "../createContext";
-import { useState, useRef, useEffect, useCallback, useMemo, useContext } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  useContext,
+} from "react";
 import React from "react";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -283,9 +290,7 @@ function ChatConversation() {
     { dependencies: [callEnd], scope: callContainerRef }
   );
 
- const onEnter = contextSafe(() => {
-
- })
+  const onEnter = contextSafe(() => {});
 
   // voice call refs and states
 
@@ -298,7 +303,7 @@ function ChatConversation() {
   const audioContextRef = useRef(null);
   const processorRef = useRef(null);
   const nextStartTimeRef = useRef(null);
-  const [codingMode, setCodingMode] = useState(false)
+  const [codingMode, setCodingMode] = useState(false);
 
   // FIX: Track messages in a Ref so we can read them without re-triggering effects
   const messagesRef = useRef(message);
@@ -458,8 +463,8 @@ function ChatConversation() {
           type: "Settings",
           audio: {
             input: {
-              encoding: "linear16", // ✅ THE FIX: Raw PCM Audio
-              sample_rate: sampleRate, // ✅ Must match the browser's mic
+              encoding: "linear16",
+              sample_rate: sampleRate,
             },
             output: {
               encoding: "linear16",
@@ -472,17 +477,18 @@ function ChatConversation() {
             think: {
               provider: { type: "open_ai", model: "gpt-4o-mini" },
               prompt: instructions,
-              functions:[
+              functions: [
                 {
-                  name:"enable_coding_mode",
-                  description:"Call this Function when you ask a coding question that requires the user to write code.",
-                  parameters:{
-                    type:"object",
-                    properties:{}
-                  }
-                }
-              ]
-            }, 
+                  name: "enable_coding_mode",
+                  description:
+                    "Call this Function when you ask a coding question that requires the user to write code.",
+                  parameters: {
+                    type: "object",
+                    properties: {},
+                  },
+                },
+              ],
+            },
             speak: {
               provider: { type: "deepgram", model: "aura-2-thalia-en" },
             },
@@ -523,33 +529,38 @@ function ChatConversation() {
       };
 
       // F. Handle Messages
-      socketRef.current.onmessage = async (message) => { // 'message' is the Event Object from the browser, 'message.data' is the actual payload from deepgram (writing so i dont get confused later)
+      socketRef.current.onmessage = async (message) => {
+        // 'message' is the Event Object from the browser, 'message.data' is the actual payload from deepgram (writing so i dont get confused later)
         if (message.data instanceof Blob) {
           playAudio(message.data);
           setOrbState("talking");
           // console.log("blob data", message.data)
           console.log(orbState);
-          
         } else {
           const event = JSON.parse(message.data);
           console.log("event", event);
 
-          if(event.type === "FunctionCallRequest") {
-            const call = event.functions[0]
+          if (event.type === "FunctionCallRequest") {
+            // function request
+            const call = event.functions[0];
             // console.log("name", call.name)
             // console.log("id", call.id)
 
-            if(call.name === "enable_coding_mode") {
-              setCodingMode(true)
+            if (call.name === "enable_coding_mode") {
+              setCodingMode(true);
 
               const response = {
-                type:"FunctionCallResponse",
-                id:call.id,
-                name:call.name,
-                content:"Coding mode enabled. The user is now seeing the code box."
-              }
+                type: "FunctionCallResponse",
+                id: call.id,
+                name: call.name,
+                content:
+                  "Coding mode enabled. The user is now seeing the code box.",
+              };
               // console.log("function response", JSON.stringify(response))
-              socketRef.current.send(JSON.stringify(response))
+              console.log(
+                "succesfully recieved the function call, coding mode enabled"
+              );
+              socketRef.current.send(JSON.stringify(response));
             }
           }
 
@@ -560,7 +571,7 @@ function ChatConversation() {
               event.role === "user" ? "user" : "assistant",
               event.content
             );
-            // console.log("text daata", event.content);
+            //  console.log("text daata", message);
           }
           if (event.type === "UserStartedSpeaking") setOrbState("listening");
         }
@@ -572,17 +583,17 @@ function ChatConversation() {
   };
 
   const handleCodeSubmit = (codeSnippet) => {
-    if(connectionStatus === "active") {
+    if (connectionStatus === "active") {
       const response = {
-        type:"ConversationText",
-        role:"user",
-        content:`Here is the code i wrote:\n ${codeSnippet}`
-      }
+        type: "ConversationText",
+        role: "user",
+        content: `Here is the code i wrote:\n ${codeSnippet}`,
+      };
 
-      console.log("code submit response", response)
-      socketRef.current.send(JSON.stringify(response))
+      console.log("code submit response", response);
+      socketRef.current.send(JSON.stringify(response));
     }
-  }
+  };
 
   // show the interview interface if survey is completed
 
@@ -605,6 +616,7 @@ function ChatConversation() {
                     />
                   ) : (
                     <>
+                      {console.log(message)}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-10 w-full max-w-5xl mx-auto">
                         {/* CARD 1 */}
                         <div className="border border-zinc-700 rounded-xl bg-zinc-900/50 flex justify-center items-center aspect-video overflow-hidden shadow-lg">
@@ -621,6 +633,22 @@ function ChatConversation() {
                           agentState={orbState}
                         /> */}
                         </div>
+                      </div>
+
+                      <div className="">
+                        {message.map((msg, index) => {
+                          const isUser = msg.user === "user";
+                          const textContent = isUser ? msg.text : msg.text;
+                          console.log("text content", textContent);
+
+                          return (
+                            <>
+                              <p className="text-white text-center" key={index}>
+                                {textContent}
+                              </p>
+                            </>
+                          );
+                        })}
                       </div>
                     </>
                   )}
