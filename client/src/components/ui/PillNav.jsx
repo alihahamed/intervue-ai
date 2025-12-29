@@ -14,7 +14,9 @@ const PillNav = ({
   hoveredPillTextColor = '#060010',
   pillTextColor,
   onMobileMenuClick,
-  initialLoadAnimation = true
+  initialLoadAnimation = true,
+  animationDelay = 0, 
+  onClick
 }) => {
   const resolvedPillTextColor = pillTextColor ?? baseColor;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -105,7 +107,8 @@ const PillNav = ({
         gsap.to(logo, {
           scale: 1,
           duration: 0.6,
-          ease
+          ease,
+          delay:animationDelay
         });
       }
 
@@ -114,7 +117,8 @@ const PillNav = ({
         gsap.to(navItems, {
           width: 'auto',
           duration: 0.6,
-          ease
+          ease,
+          delay:animationDelay
         });
       }
     }

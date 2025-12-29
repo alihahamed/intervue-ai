@@ -77,6 +77,7 @@ const HomeNav = React.memo(() => {
       pillColor="black"
       hoveredPillTextColor="black"
       pillTextColor="white"
+      animationDelay={6.1}
     />
   );
 });
@@ -635,21 +636,11 @@ function ChatConversation() {
                         </div>
                       </div>
 
-                      <div className="">
-                        {message.map((msg, index) => {
-                          const isUser = msg.user === "user";
-                          const textContent = isUser ? msg.text : msg.text;
-                          console.log("text content", textContent);
-
-                          return (
-                            <>
-                              <p className="text-white text-center" key={index}>
-                                {textContent}
-                              </p>
-                            </>
-                          );
-                        })}
-                      </div>
+                      {message.length > 0 && (
+                        <div className="text-center pt-12">
+                          <p className="text-white">{message[message.length - 1].text}</p>
+                        </div>
+                      )}
                     </>
                   )}
                 </ConversationContent>
