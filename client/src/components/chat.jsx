@@ -48,7 +48,7 @@ function ChatConversation() {
     setCodingMode,
     codingMode,
     resetInterview,
-    interview
+    interview,
   } = useChat();
 
   const InterviewBackground = React.memo(() => {
@@ -79,7 +79,7 @@ function ChatConversation() {
         pillColor="black"
         hoveredPillTextColor="black"
         pillTextColor="white"
-        onReset={resetInterview}
+        onReset={handleReset}
       />
     );
   });
@@ -317,25 +317,7 @@ function ChatConversation() {
 
   const onEnter = contextSafe(() => {});
 
-  useGSAP(() => {
-    const tl = gsap.timeline();
-
-    tl.from(".banner-col-chat", {
-      yPercent: 100,
-      duration: 0.8,
-      stagger: 0.1,
-      ease: "power3.inOut",
-    }).from(
-      ".chat-content",
-      {
-        opacity: 0,
-        yPercent: 100,
-        duration: 0.6,
-        ease: "power3.out",
-      },
-      "-=0.4"
-    );
-  }, [interview])
+ 
 
   // voice call refs and states
 
@@ -660,20 +642,42 @@ function ChatConversation() {
 
   // show the interview interface if survey is completed
 
-  if (survey.isCompleted && interview ) {
+  const handleReset = () => {
+    const tl = gsap.timeline({
+      onComplete: resetInterview,
+    });
+    tl.from(".banner-col-chat", {
+      yPercent: 0, // Assuming they moved away, bring them back to default
+      stagger: 0.1,
+      duration: 0.6,
+      ease: "power3.in",
+    }).from(
+      ".chat-content",
+      {
+        opacity: 0,
+        y: 50,
+        duration: 0.4,
+      },
+      "<"
+    ); // Run at the same time
+  };
+
+  if (survey.isCompleted) {
     return (
       // 1. MAIN CONTAINER: Full Screen & Relative
       <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center pb-20">
-        <InterviewBackground />
         <div className="relative z-10 w-full flex items-center justify-center px-4 pointer-events-none">
-
-          <div className="absolute inset-0 flex w-full h-full z-0 pointer-events-none">
+          
+          
+        <InterviewBackground />
+        <div className="absolute inset-0 flex w-full h-full z-0 pointer-events-none">
             {/* We create 4 columns, each 1/4 width */}
             <div className="banner-col-chat w-1/4 h-full bg-white " />
             <div className="banner-col-chat w-1/4 h-full bg-white" />
             <div className="banner-col-chat w-1/4 h-full bg-white " />
             <div className="banner-col-chat w-1/4 h-full bg-white" />
           </div>
+        
 
           <Card className="chat-card-container chat-content pointer-events-auto w-full max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
             <div className="flex h-full flex-col z-10 relative w-full">
