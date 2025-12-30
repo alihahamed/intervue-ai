@@ -25,7 +25,7 @@ import { TextGenerateEffect } from "./ui/text-generate-effect";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { GlowingEffect } from "./ui/glowing-effect";
-import ChatInput from "./chatInput";
+
 import { WavyBackground } from "./ui/wavy-background";
 import { HoverBorderGradient } from "./ui/hover-border-gradient";
 import { Button } from "./ui/moving-border";
@@ -33,6 +33,7 @@ import FloatingLines from "./ui/FloatingLines";
 import { Mic, MicOff } from "lucide-react";
 import ghost from "../assets/ghost.png";
 import PillNav from "./ui/PillNav";
+import { VoicePicker } from "./voicePicker";
 
 const InterviewBackground = React.memo(() => {
   return (
@@ -96,6 +97,8 @@ function ChatConversation() {
     handleOptionUpdate,
     survey,
     deleteMessage,
+    setCodingMode,
+    codingMode
   } = useChat();
 
   // gsap animations
@@ -304,7 +307,9 @@ function ChatConversation() {
   const audioContextRef = useRef(null);
   const processorRef = useRef(null);
   const nextStartTimeRef = useRef(null);
-  const [codingMode, setCodingMode] = useState(false);
+  const streamRef = useRef(null);
+  const videoRef = useRef(null);
+  const [selectedVoice, setSelectedVoice] = useState("aura-2-thalia-en");
 
   // FIX: Track messages in a Ref so we can read them without re-triggering effects
   const messagesRef = useRef(message);
@@ -374,6 +379,15 @@ function ChatConversation() {
     if (mediaRecorderRef.current !== "inactive") {
       mediaRecorderRef.current?.stop();
       mediaRecorderRef.current = null;
+    }
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
 
     if (processorRef.current) {
@@ -448,10 +462,17 @@ function ChatConversation() {
         setConnectionStatus("active");
         console.log("history", historyMessages);
 
-        // 1. Get Mic Stream FIRST to know the Sample Rate
+        // 1. Get Mic And Video Stream FIRST to know the Sample Rate
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
+          video: true,
         });
+
+        streamRef.current = stream;
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
 
         if (!audioContextRef.current) {
           audioContextRef.current = new (window.AudioContext ||
@@ -491,7 +512,7 @@ function ChatConversation() {
               ],
             },
             speak: {
-              provider: { type: "deepgram", model: "aura-2-thalia-en" },
+              provider: { type: "deepgram", model: selectedVoice },
             },
             context: { messages: historyMessages },
           },
@@ -549,7 +570,6 @@ function ChatConversation() {
 
             if (call.name === "enable_coding_mode") {
               setCodingMode(true);
-
               const response = {
                 type: "FunctionCallResponse",
                 id: call.id,
@@ -557,10 +577,11 @@ function ChatConversation() {
                 content:
                   "Coding mode enabled. The user is now seeing the code box.",
               };
-              // console.log("function response", JSON.stringify(response))
+              console.log("function response", JSON.stringify(response));
               console.log(
                 "succesfully recieved the function call, coding mode enabled"
               );
+
               socketRef.current.send(JSON.stringify(response));
             }
           }
@@ -593,12 +614,13 @@ function ChatConversation() {
 
       console.log("code submit response", response);
       socketRef.current.send(JSON.stringify(response));
+      
     }
   };
 
   // show the interview interface if survey is completed
 
-  if (survey.isCompleted) {
+  if (survey.isCompleted && !codingMode) {
     return (
       // 1. MAIN CONTAINER: Full Screen & Relative
       <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center pb-20">
@@ -629,16 +651,21 @@ function ChatConversation() {
 
                         {/* CARD 2 */}
                         <div className="border border-zinc-700 rounded-xl bg-zinc-900/50 flex justify-center items-center aspect-video overflow-hidden shadow-lg">
-                          {/* <Orb
-                          className="w-full h-[100px] object-cover"
-                          agentState={orbState}
-                        /> */}
+                          <video
+                            ref={videoRef}
+                            muted
+                            className="w-full h-full object-cover transform -scale-x-100"
+                            playsInline
+                            autoPlay
+                          />
                         </div>
                       </div>
 
                       {message.length > 0 && (
                         <div className="text-center pt-12">
-                          <p className="text-white">{message[message.length - 1].text}</p>
+                          <p className="text-white">
+                            {message[message.length - 1].text}
+                          </p>
                         </div>
                       )}
                     </>
@@ -654,23 +681,53 @@ function ChatConversation() {
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <div
-                        className={`w-2.5 h-2.5 rounded-full ${
+                        className={cn(
+                          "w-3 h-3 rounded-full transition-all duration-500",
                           connectionStatus === "active"
-                            ? "bg-emerald-400"
-                            : "bg-amber-400"
-                        }`}
+                            ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+                            : connectionStatus === "idle"
+                            ? "bg-zinc-600"
+                            : "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.6)]",
+                          (connectionStatus === "active" ||
+                            connectionStatus === "connecting") &&
+                            "animate-pulse"
+                        )}
                       />
-                      {connectionStatus === "active" && (
-                        <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping opacity-75" />
+                      {(connectionStatus === "active" ||
+                        connectionStatus === "listening") && (
+                        <div className="absolute inset-0 w-3 h-3 rounded-full bg-emerald-500 animate-ping opacity-40" />
+                      )}
+                      {connectionStatus === "connecting" && (
+                        <div className="absolute inset-0 w-3 h-3 rounded-full bg-amber-500 animate-pulse opacity-60" />
+                      )}
+                      {connectionStatus === "idle" && (
+                        <div className="absolute inset-0 w-3 h-3 rounded-full bg-zinc-600/30 animate-pulse" />
                       )}
                     </div>
-                    <span className="text-zinc-400 text-sm font-medium">
+                    <span
+                      className={cn(
+                        "text-sm font-semibold hidden sm:inline transition-colors duration-300",
+                        connectionStatus === "active"
+                          ? "text-emerald-400"
+                          : connectionStatus === "idle"
+                          ? "text-zinc-500"
+                          : "text-amber-400 font-bold"
+                      )}
+                    >
                       {connectionStatus === "idle"
                         ? "Idle"
                         : connectionStatus === "active"
-                        ? "Listening..."
-                        : "Connecting..."}
+                        ? "Listening"
+                        : "Connecting"}
                     </span>
+                  </div>
+
+                  <div className="flex-1 max-w-[200px]">
+                    <VoicePicker
+                      value={selectedVoice}
+                      onValueChange={setSelectedVoice}
+                      disabled={!callEnd}
+                    />
                   </div>
 
                   {/* Action Buttons */}
@@ -723,6 +780,12 @@ function ChatConversation() {
         {!callEnd && <CallNav />}
       </div>
     );
+  }
+
+  if (codingMode) {
+    <Card className="chat-card-container pointer-events-auto w-full max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+      <h1>helloo</h1>
+    </Card>;
   }
 
   // hero and wagera wagera

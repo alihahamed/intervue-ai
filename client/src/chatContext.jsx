@@ -6,6 +6,8 @@ export const ChatProvider = ({ children }) => {
   const [message, setMessage] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectNiche, setSelectNiche] = useState("Hooks");
+  const [codingMode, setCodingMode] = useState(false)
+
   const [survey, setSurvey] = useState(() => {
     const surveyData = localStorage.getItem("surveyData") // find the data from local storage
 
@@ -80,7 +82,9 @@ export const ChatProvider = ({ children }) => {
         setSurvey,
         handleOptionUpdate,
         deleteMessage,
-        resetInterview
+        resetInterview,
+        codingMode,
+        setCodingMode
       }}
     >
       {children}
