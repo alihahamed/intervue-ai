@@ -36,6 +36,7 @@ import PillNav from "./ui/PillNav";
 import { VoicePicker } from "./voicePicker";
 import CodeInterface from "./codeInterface";
 
+
 const InterviewBackground = React.memo(() => {
   return (
     <div className="absolute inset-0 z-0">
@@ -64,6 +65,7 @@ const CallNav = React.memo(() => {
       pillColor="black"
       hoveredPillTextColor="black"
       pillTextColor="white"
+      onReset={resetInterview}
     />
   );
 });
@@ -87,7 +89,8 @@ const HomeNav = React.memo(() => {
 // Give it a display name for debugging
 InterviewBackground.displayName = "InterviewBackground";
 CallNav.displayName = "CallNav";
-HomeNav.displayName = "HomeNav";
+HomeNav.displayName = "HomeNav"
+
 
 function ChatConversation() {
   const {
@@ -99,8 +102,10 @@ function ChatConversation() {
     survey,
     deleteMessage,
     setCodingMode,
-    codingMode
+    codingMode,
+    resetInterview
   } = useChat();
+  ;
 
   // gsap animations
 

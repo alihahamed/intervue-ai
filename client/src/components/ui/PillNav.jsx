@@ -236,48 +236,6 @@ const PillNav = ({
         className={`w-full md:w-max flex items-center justify-center md:justify-start box-border px-4 md:px-0 ${className}`}
         aria-label="Primary"
         style={cssVars}>
-        {isRouterLink(items?.[0]?.href) ? (
-          <Link
-            to={items[0].href}
-            aria-label="Home"
-            onMouseEnter={handleLogoEnter}
-            role="menuitem"
-            ref={el => {
-              logoRef.current = el;
-            }}
-            className="rounded-full p-2 inline-flex items-center justify-center overflow-hidden"
-            style={{
-              width: 'var(--nav-h)',
-              height: 'var(--nav-h)',
-              background: 'var(--base, #000)'
-            }}>
-            <img
-              src={logo}
-              alt={logoAlt}
-              ref={logoImgRef}
-              className="w-full h-full object-cover block" />
-          </Link>
-        ) : (
-          <a
-            href={items?.[0]?.href || '#'}
-            aria-label="Home"
-            onMouseEnter={handleLogoEnter}
-            ref={el => {
-              logoRef.current = el;
-            }}
-            className="rounded-full p-2 inline-flex items-center justify-center overflow-hidden"
-            style={{
-              width: 'var(--nav-h)',
-              height: 'var(--nav-h)',
-              background: 'var(--base, #000)'
-            }}>
-            <img
-              src={logo}
-              alt={logoAlt}
-              ref={logoImgRef}
-              className="w-full h-full object-cover block" />
-          </a>
-        )}
 
         <div
           ref={navItemsRef}
@@ -342,29 +300,20 @@ const PillNav = ({
 
               return (
                 <li key={item.href} role="none" className="flex h-full">
-                  {isRouterLink(item.href) ? (
-                    <Link
-                      role="menuitem"
-                      to={item.href}
+                  
+                    <button
+                      // role="menuitem"
+                      // to={item.href}
                       className={basePillClasses}
                       style={pillStyle}
                       aria-label={item.ariaLabel || item.label}
                       onMouseEnter={() => handleEnter(i)}
-                      onMouseLeave={() => handleLeave(i)}>
-                      {PillContent}
-                    </Link>
-                  ) : (
-                    <a
-                      role="menuitem"
-                      href={item.href}
-                      className={basePillClasses}
-                      style={pillStyle}
-                      aria-label={item.ariaLabel || item.label}
-                      onMouseEnter={() => handleEnter(i)}
-                      onMouseLeave={() => handleLeave(i)}>
-                      {PillContent}
-                    </a>
-                  )}
+                      onMouseLeave={() => handleLeave(i)}
+                      onClick={onReset}
+                      >       
+                      {PillContent}                   
+                    </button>
+
                 </li>
               );
             })}
