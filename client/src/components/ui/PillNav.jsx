@@ -16,7 +16,7 @@ const PillNav = ({
   onMobileMenuClick,
   initialLoadAnimation = true,
   animationDelay = 0, 
-  onClick
+  onReset
 }) => {
   const resolvedPillTextColor = pillTextColor ?? baseColor;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

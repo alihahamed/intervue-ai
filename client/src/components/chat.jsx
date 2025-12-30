@@ -245,40 +245,45 @@ function ChatConversation() {
   // useGSAP for pushing the hero text, sub text and the pills up when the chat card appears
 
   useGSAP(() => {
-    if (!isProcessing && !survey.isCompleted) return;
+  if (!isProcessing && !survey.isCompleted) return;
 
-    const tl = gsap.timeline();
+  const tl = gsap.timeline();
 
-    tl.to([".heroText", ".subtitleText", ".techPills"], {
-      y: -50,
+  // 1. Clean Exit for Hero Elements
+  tl.to([".heroText", ".subtitleText", ".techPills", ".pop-btn"], {
+    y: -20,
+    opacity: 0,
+    duration: 0.5,
+    stagger: 0.05,
+    ease: "power2.inOut",
+    display: "none",
+  });
+
+  // 2. The "Premium Pop" Reveal
+  tl.fromTo(
+    ".chat-card-container",
+    {
+      y: 100,             // Lower starting point for more travel
+      scale: 0.86,        // Subtle scale-up feels more professional
       opacity: 0,
-      duration: 0.8,
-      stagger: 0.1,
-      ease: "power3.in",
-      overwrite: true,
-      display: "none",
-    });
-
-    tl.fromTo(
-      ".chat-card-container",
-      {
-        y: 60, // Start lower
-        scale: 0.55, // Start slightly smaller
-        opacity: 0,
-        filter: "blur(10px)",
-      },
-      {
-        y: 0,
-        scale: 1,
-        opacity: 1.1,
-        filter: "blur(0px)",
-        duration: 1,
-        ease: "power4.Out",
-        clearProps: "all", // Clean up afterwards
-      },
-      "-=0.4" // Start overlapping slightly with the text exit
-    );
-  }, [survey.isCompleted]);
+      rotationX: 25,      // Slight 3D tilt
+      transformOrigin: "center bottom",
+      filter: "blur(20px) brightness(2)", // Start "glowing" and blurred
+    },
+    {
+      y: 0,
+      scale: 1,
+      opacity: 1,
+      rotationX: 0,
+      filter: "blur(0px) brightness(1)",
+      duration: 1.8,
+      // 'back.out(1.4)' gives a tiny overshoot that feels like physical weight
+      ease: "back.out(1.4)", 
+      clearProps: "transform,filter", // Clean up to allow hover effects later
+    },
+    "-=0.3" // Overlap with text exit
+  );
+}, [survey.isCompleted]);
 
   // gsap animation for the floating orb
 
