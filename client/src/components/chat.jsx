@@ -280,6 +280,18 @@ function ChatConversation() {
     );
   }, [survey.isCompleted]);
 
+  // gsap animation for the floating orb
+
+  useGSAP(() => {
+    gsap.to(".orb-ref", {
+      y:-20,
+      duration:2,
+      ease:"sine.inOut",
+      yoyo:true,
+      repeat:-1
+    })
+  }, [])
+
   // gsap animations for call control buttons
 
   const [callEnd, setCallEnd] = useState(true);
@@ -311,6 +323,7 @@ function ChatConversation() {
   const streamRef = useRef(null);
   const videoRef = useRef(null);
   const [selectedVoice, setSelectedVoice] = useState("aura-2-thalia-en");
+  const orbRef = useRef(null)
 
   // FIX: Track messages in a Ref so we can read them without re-triggering effects
   const messagesRef = useRef(message);
@@ -608,13 +621,13 @@ function ChatConversation() {
   const handleCodeSubmit = (codeSnippet) => {
     if (connectionStatus === "active") {
       const response = {
-        type: "ConversationText",
-        role: "user",
+        type: "InjectUserMessage",
         content: `Here is the code i wrote:\n ${codeSnippet}`,
       };
 
       console.log("code submit response", JSON.stringify(response));
       socketRef.current.send(JSON.stringify(response));
+      
     }
   };
 
@@ -631,12 +644,14 @@ function ChatConversation() {
               <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
                 <ConversationContent className="p-2 md:p-4 space-y-4">
                   {callEnd ? (
+                    <div ref={orbRef}>
                     <ConversationEmptyState
-                      icon={<Orb className="size-25" agentState="listening" />}
+                      icon={<Orb className="size-25 orb-ref" agentState="listening" containerClassName="" />}
                       title="Are You Ready?"
-                      description="Start the Call to see the messages here"
+                      description="Your interview session is ready. Click start to begin."
                       className="flex justify-center items-center"
                     />
+                    </div>
                   ) : (
                     <>
                       {console.log(message)}
@@ -688,7 +703,7 @@ function ChatConversation() {
                           connectionStatus === "active"
                             ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]"
                             : connectionStatus === "idle"
-                            ? "bg-zinc-600"
+                            ? "bg-zinc-600 animate-pulse"
                             : "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.6)]",
                           (connectionStatus === "active" ||
                             connectionStatus === "connecting") &&

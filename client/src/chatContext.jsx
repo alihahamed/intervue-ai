@@ -16,7 +16,8 @@ export const ChatProvider = ({ children }) => {
       experience: "",
       techStack: "",
       targetRole: "",
-      isCompleted: false
+      isCompleted: false,
+      agentName:""
     }
   })
 
