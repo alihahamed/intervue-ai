@@ -432,6 +432,7 @@ function ChatConversation() {
 
       const { instructions } = await instructionsResponse.json();
       const { key } = await tokenResponse.json();
+      console.log("instructions", instructions)
 
       // B. Prepare History
       const historyMessages = messagesRef.current
@@ -461,7 +462,7 @@ function ChatConversation() {
         if (!isMounted) return;
         console.log("✅ WebSocket Open!");
         setConnectionStatus("active");
-        console.log("history", historyMessages);
+        // console.log("history", historyMessages);
 
         // 1. Get Mic And Video Stream FIRST to know the Sample Rate
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -558,10 +559,10 @@ function ChatConversation() {
           playAudio(message.data);
           setOrbState("talking");
           // console.log("blob data", message.data)
-          console.log(orbState);
+          // console.log(orbState);
         } else {
           const event = JSON.parse(message.data);
-          console.log("event", event);
+          // console.log("event", event);
 
           if (event.type === "FunctionCallRequest") {
             // function request
@@ -578,11 +579,10 @@ function ChatConversation() {
                 content:
                   "Coding mode enabled. The user is now seeing the code box.",
               };
-              console.log("function response", JSON.stringify(response));
+              // console.log("function response", JSON.stringify(response));
               console.log(
                 "succesfully recieved the function call, coding mode enabled"
               );
-
               socketRef.current.send(JSON.stringify(response));
             }
           }
@@ -613,9 +613,8 @@ function ChatConversation() {
         content: `Here is the code i wrote:\n ${codeSnippet}`,
       };
 
-      console.log("code submit response", response);
+      console.log("code submit response", JSON.stringify(response));
       socketRef.current.send(JSON.stringify(response));
-      
     }
   };
 
