@@ -34,6 +34,7 @@ import { Mic, MicOff } from "lucide-react";
 import ghost from "../assets/ghost.png";
 import PillNav from "./ui/PillNav";
 import { VoicePicker } from "./voicePicker";
+import CodeInterface from "./codeInterface";
 
 const InterviewBackground = React.memo(() => {
   return (
@@ -620,7 +621,7 @@ function ChatConversation() {
 
   // show the interview interface if survey is completed
 
-  if (survey.isCompleted && !codingMode) {
+  if (survey.isCompleted) {
     return (
       // 1. MAIN CONTAINER: Full Screen & Relative
       <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center pb-20">
@@ -673,6 +674,8 @@ function ChatConversation() {
                 </ConversationContent>
                 <ConversationScrollButton />
               </Conversation>
+
+              <CodeInterface onSubmit={handleCodeSubmit} isOpen={codingMode} onClose={() => setCodingMode(false)}/>
 
               {/* DEDICATED CONTROLS FOOTER */}
               <div className="w-full flex justify-center p-4 z-20">
@@ -782,11 +785,6 @@ function ChatConversation() {
     );
   }
 
-  if (codingMode) {
-    <Card className="chat-card-container pointer-events-auto w-full max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
-      <h1>helloo</h1>
-    </Card>;
-  }
 
   // hero and wagera wagera
   return (
