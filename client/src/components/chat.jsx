@@ -36,62 +36,6 @@ import PillNav from "./ui/PillNav";
 import { VoicePicker } from "./voicePicker";
 import CodeInterface from "./codeInterface";
 
-
-const InterviewBackground = React.memo(() => {
-  return (
-    <div className="absolute inset-0 z-0">
-      <FloatingLines
-        enabledWaves={["middle", "bottom"]}
-        lineCount={[10, 15, 20]}
-        lineDistance={[8, 6, 4]}
-        bendRadius={8.0}
-        bendStrength={-1}
-        interactive={true}
-        parallax={false}
-        linesGradient={["#0f172a", "#1e293b", "#334155", "#0f172a"]}
-      />
-    </div>
-  );
-});
-
-const CallNav = React.memo(() => {
-  return (
-    <PillNav
-      logo={ghost}
-      items={[{ label: "Reset Interview", href: "/" }]}
-      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 call-nav"
-      ease="power2.easeOut"
-      baseColor="white"
-      pillColor="black"
-      hoveredPillTextColor="black"
-      pillTextColor="white"
-      onReset={resetInterview}
-    />
-  );
-});
-
-const HomeNav = React.memo(() => {
-  return (
-    <PillNav
-      logo={ghost}
-      items={[{ label: "How It Works", href: "/" }]}
-      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 home-nav"
-      ease="power2.easeOut"
-      baseColor="white"
-      pillColor="black"
-      hoveredPillTextColor="black"
-      pillTextColor="white"
-      animationDelay={6.1}
-    />
-  );
-});
-
-// Give it a display name for debugging
-InterviewBackground.displayName = "InterviewBackground";
-CallNav.displayName = "CallNav";
-HomeNav.displayName = "HomeNav"
-
-
 function ChatConversation() {
   const {
     addMessage,
@@ -103,9 +47,63 @@ function ChatConversation() {
     deleteMessage,
     setCodingMode,
     codingMode,
-    resetInterview
+    resetInterview,
+    interview
   } = useChat();
-  ;
+
+  const InterviewBackground = React.memo(() => {
+    return (
+      <div className="absolute inset-0 z-0">
+        <FloatingLines
+          enabledWaves={["middle", "bottom"]}
+          lineCount={[10, 15, 20]}
+          lineDistance={[8, 6, 4]}
+          bendRadius={8.0}
+          bendStrength={-1}
+          interactive={true}
+          parallax={false}
+          linesGradient={["#0f172a", "#1e293b", "#334155", "#0f172a"]}
+        />
+      </div>
+    );
+  });
+
+  const CallNav = React.memo(() => {
+    return (
+      <PillNav
+        logo={ghost}
+        items={[{ label: "Reset Interview", href: "/" }]}
+        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 call-nav"
+        ease="power2.easeOut"
+        baseColor="white"
+        pillColor="black"
+        hoveredPillTextColor="black"
+        pillTextColor="white"
+        onReset={resetInterview}
+      />
+    );
+  });
+
+  const HomeNav = React.memo(() => {
+    return (
+      <PillNav
+        logo={ghost}
+        items={[{ label: "How It Works", href: "/" }]}
+        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 home-nav"
+        ease="power2.easeOut"
+        baseColor="white"
+        pillColor="black"
+        hoveredPillTextColor="black"
+        pillTextColor="white"
+        animationDelay={6.1}
+      />
+    );
+  });
+
+  // Give it a display name for debugging
+  InterviewBackground.displayName = "InterviewBackground";
+  CallNav.displayName = "CallNav";
+  HomeNav.displayName = "HomeNav";
 
   // gsap animations
 
@@ -250,57 +248,57 @@ function ChatConversation() {
   // useGSAP for pushing the hero text, sub text and the pills up when the chat card appears
 
   useGSAP(() => {
-  if (!isProcessing && !survey.isCompleted) return;
+    if (!isProcessing && !survey.isCompleted) return;
 
-  const tl = gsap.timeline();
+    const tl = gsap.timeline();
 
-  // 1. Clean Exit for Hero Elements
-  tl.to([".heroText", ".subtitleText", ".techPills", ".pop-btn"], {
-    y: -20,
-    opacity: 0,
-    duration: 0.5,
-    stagger: 0.05,
-    ease: "power2.inOut",
-    display: "none",
-  });
-
-  // 2. The "Premium Pop" Reveal
-  tl.fromTo(
-    ".chat-card-container",
-    {
-      y: 100,             // Lower starting point for more travel
-      scale: 0.86,        // Subtle scale-up feels more professional
+    // 1. Clean Exit for Hero Elements
+    tl.to([".heroText", ".subtitleText", ".techPills", ".pop-btn"], {
+      y: -20,
       opacity: 0,
-      rotationX: 25,      // Slight 3D tilt
-      transformOrigin: "center bottom",
-      filter: "blur(20px) brightness(2)", // Start "glowing" and blurred
-    },
-    {
-      y: 0,
-      scale: 1,
-      opacity: 1,
-      rotationX: 0,
-      filter: "blur(0px) brightness(1)",
-      duration: 1.8,
-      // 'back.out(1.4)' gives a tiny overshoot that feels like physical weight
-      ease: "back.out(1.4)", 
-      clearProps: "transform,filter", // Clean up to allow hover effects later
-    },
-    "-=0.3" // Overlap with text exit
-  );
-}, [survey.isCompleted]);
+      duration: 0.5,
+      stagger: 0.05,
+      ease: "power2.inOut",
+      display: "none",
+    });
+
+    // 2. The "Premium Pop" Reveal
+    tl.fromTo(
+      ".chat-card-container",
+      {
+        y: 100, // Lower starting point for more travel
+        scale: 0.86, // Subtle scale-up feels more professional
+        opacity: 0,
+        rotationX: 25, // Slight 3D tilt
+        transformOrigin: "center bottom",
+        filter: "blur(20px) brightness(2)", // Start "glowing" and blurred
+      },
+      {
+        y: 0,
+        scale: 1,
+        opacity: 1,
+        rotationX: 0,
+        filter: "blur(0px) brightness(1)",
+        duration: 1.8,
+        // 'back.out(1.4)' gives a tiny overshoot that feels like physical weight
+        ease: "back.out(1.4)",
+        clearProps: "transform,filter", // Clean up to allow hover effects later
+      },
+      "-=0.3" // Overlap with text exit
+    );
+  }, [survey.isCompleted]);
 
   // gsap animation for the floating orb
 
   useGSAP(() => {
     gsap.to(".orb-ref", {
-      y:-20,
-      duration:2,
-      ease:"sine.inOut",
-      yoyo:true,
-      repeat:-1
-    })
-  }, [])
+      y: -20,
+      duration: 2,
+      ease: "sine.inOut",
+      yoyo: true,
+      repeat: -1,
+    });
+  }, []);
 
   // gsap animations for call control buttons
 
@@ -319,6 +317,26 @@ function ChatConversation() {
 
   const onEnter = contextSafe(() => {});
 
+  useGSAP(() => {
+    const tl = gsap.timeline();
+
+    tl.from(".banner-col-chat", {
+      yPercent: 100,
+      duration: 0.8,
+      stagger: 0.1,
+      ease: "power3.inOut",
+    }).from(
+      ".chat-content",
+      {
+        opacity: 0,
+        yPercent: 100,
+        duration: 0.6,
+        ease: "power3.out",
+      },
+      "-=0.4"
+    );
+  }, [interview])
+
   // voice call refs and states
 
   const [connectionStatus, setConnectionStatus] = useState("idle");
@@ -333,7 +351,7 @@ function ChatConversation() {
   const streamRef = useRef(null);
   const videoRef = useRef(null);
   const [selectedVoice, setSelectedVoice] = useState("aura-2-thalia-en");
-  const orbRef = useRef(null)
+  const orbRef = useRef(null);
 
   // FIX: Track messages in a Ref so we can read them without re-triggering effects
   const messagesRef = useRef(message);
@@ -455,7 +473,7 @@ function ChatConversation() {
 
       const { instructions } = await instructionsResponse.json();
       const { key } = await tokenResponse.json();
-      console.log("instructions", instructions)
+      console.log("instructions", instructions);
 
       // B. Prepare History
       const historyMessages = messagesRef.current
@@ -637,30 +655,44 @@ function ChatConversation() {
 
       console.log("code submit response", JSON.stringify(response));
       socketRef.current.send(JSON.stringify(response));
-      
     }
   };
 
   // show the interview interface if survey is completed
 
-  if (survey.isCompleted) {
+  if (survey.isCompleted && interview ) {
     return (
       // 1. MAIN CONTAINER: Full Screen & Relative
       <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center pb-20">
         <InterviewBackground />
         <div className="relative z-10 w-full flex items-center justify-center px-4 pointer-events-none">
-          <Card className="chat-card-container pointer-events-auto w-full max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+
+          <div className="absolute inset-0 flex w-full h-full z-0 pointer-events-none">
+            {/* We create 4 columns, each 1/4 width */}
+            <div className="banner-col-chat w-1/4 h-full bg-white " />
+            <div className="banner-col-chat w-1/4 h-full bg-white" />
+            <div className="banner-col-chat w-1/4 h-full bg-white " />
+            <div className="banner-col-chat w-1/4 h-full bg-white" />
+          </div>
+
+          <Card className="chat-card-container chat-content pointer-events-auto w-full max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
             <div className="flex h-full flex-col z-10 relative w-full">
               <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
                 <ConversationContent className="p-2 md:p-4 space-y-4">
                   {callEnd ? (
                     <div ref={orbRef}>
-                    <ConversationEmptyState
-                      icon={<Orb className="size-25 orb-ref" agentState="listening" containerClassName="" />}
-                      title="Are You Ready?"
-                      description="Your interview session is ready. Click start to begin."
-                      className="flex justify-center items-center"
-                    />
+                      <ConversationEmptyState
+                        icon={
+                          <Orb
+                            className="size-25 orb-ref"
+                            agentState="listening"
+                            containerClassName=""
+                          />
+                        }
+                        title="Are You Ready?"
+                        description="Your interview session is ready. Click start to begin."
+                        className="flex justify-center items-center"
+                      />
                     </div>
                   ) : (
                     <>
@@ -699,7 +731,11 @@ function ChatConversation() {
                 <ConversationScrollButton />
               </Conversation>
 
-              <CodeInterface onSubmit={handleCodeSubmit} isOpen={codingMode} onClose={() => setCodingMode(false)}/>
+              <CodeInterface
+                onSubmit={handleCodeSubmit}
+                isOpen={codingMode}
+                onClose={() => setCodingMode(false)}
+              />
 
               {/* DEDICATED CONTROLS FOOTER */}
               <div className="w-full flex justify-center p-4 z-20">
@@ -808,7 +844,6 @@ function ChatConversation() {
       </div>
     );
   }
-
 
   // hero and wagera wagera
   return (
