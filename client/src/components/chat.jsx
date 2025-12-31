@@ -36,6 +36,60 @@ import PillNav from "./ui/PillNav";
 import { VoicePicker } from "./voicePicker";
 import CodeInterface from "./codeInterface";
 
+const InterviewBackground = React.memo(() => {
+  return (
+    <div className="absolute inset-0 z-0">
+      <FloatingLines
+        enabledWaves={["middle", "bottom"]}
+        lineCount={[10, 15, 20]}
+        lineDistance={[8, 6, 4]}
+        bendRadius={8.0}
+        bendStrength={-1}
+        interactive={true}
+        parallax={false}
+        linesGradient={["#0f172a", "#1e293b", "#334155", "#0f172a"]}
+      />
+    </div>
+  );
+});
+
+const CallNav = React.memo(({ onReset }) => {
+  return (
+    <PillNav
+      logo={ghost}
+      items={[{ label: "Reset Interview", href: "/" }]}
+      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 call-nav"
+      ease="power2.easeOut"
+      baseColor="white"
+      pillColor="black"
+      hoveredPillTextColor="black"
+      pillTextColor="white"
+      onReset={onReset}
+    />
+  );
+});
+
+const HomeNav = React.memo(() => {
+  return (
+    <PillNav
+      logo={ghost}
+      items={[{ label: "How It Works", href: "/" }]}
+      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 home-nav"
+      ease="power2.easeOut"
+      baseColor="white"
+      pillColor="black"
+      hoveredPillTextColor="black"
+      pillTextColor="white"
+      animationDelay={6.1}
+    />
+  );
+});
+
+// Give it a display name for debugging
+InterviewBackground.displayName = "InterviewBackground";
+CallNav.displayName = "CallNav";
+HomeNav.displayName = "HomeNav";
+
 function ChatConversation() {
   const {
     addMessage,
@@ -51,60 +105,6 @@ function ChatConversation() {
     interview,
   } = useChat();
 
-  const InterviewBackground = React.memo(() => {
-    return (
-      <div className="absolute inset-0 z-0">
-        <FloatingLines
-          enabledWaves={["middle", "bottom"]}
-          lineCount={[10, 15, 20]}
-          lineDistance={[8, 6, 4]}
-          bendRadius={8.0}
-          bendStrength={-1}
-          interactive={true}
-          parallax={false}
-          linesGradient={["#0f172a", "#1e293b", "#334155", "#0f172a"]}
-        />
-      </div>
-    );
-  });
-
-  const CallNav = React.memo(() => {
-    return (
-      <PillNav
-        logo={ghost}
-        items={[{ label: "Reset Interview", href: "/" }]}
-        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 call-nav"
-        ease="power2.easeOut"
-        baseColor="white"
-        pillColor="black"
-        hoveredPillTextColor="black"
-        pillTextColor="white"
-        onReset={handleReset}
-      />
-    );
-  });
-
-  const HomeNav = React.memo(() => {
-    return (
-      <PillNav
-        logo={ghost}
-        items={[{ label: "How It Works", href: "/" }]}
-        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 home-nav"
-        ease="power2.easeOut"
-        baseColor="white"
-        pillColor="black"
-        hoveredPillTextColor="black"
-        pillTextColor="white"
-        animationDelay={6.1}
-      />
-    );
-  });
-
-  // Give it a display name for debugging
-  InterviewBackground.displayName = "InterviewBackground";
-  CallNav.displayName = "CallNav";
-  HomeNav.displayName = "HomeNav";
-
   // gsap animations
 
   gsap.registerPlugin(SplitText);
@@ -116,6 +116,7 @@ function ChatConversation() {
   const tlBtn = useRef(null);
   const callContainerRef = useRef(null);
   const buttonRef = useRef(null);
+  const [isResetting, setIsResetting] = useState(false);
 
   // component mount animation when page loads
 
@@ -317,8 +318,6 @@ function ChatConversation() {
 
   const onEnter = contextSafe(() => {});
 
- 
-
   // voice call refs and states
 
   const [connectionStatus, setConnectionStatus] = useState("idle");
@@ -455,7 +454,7 @@ function ChatConversation() {
 
       const { instructions } = await instructionsResponse.json();
       const { key } = await tokenResponse.json();
-      console.log("instructions", instructions);
+      
 
       // B. Prepare History
       const historyMessages = messagesRef.current
@@ -642,288 +641,322 @@ function ChatConversation() {
 
   // show the interview interface if survey is completed
 
-  const handleReset = () => {
-    const tl = gsap.timeline({
-      onComplete: resetInterview,
-    });
-    tl.from(".banner-col-chat", {
-      yPercent: 0, // Assuming they moved away, bring them back to default
+ const handleReset = () => {
+  // console.log('🔴 RESET CLICKED');
+  // console.log('Banner elements:', document.querySelectorAll('.banner-col-reset'));
+  gsap.set(".banner-col-reset", { yPercent: 100 });
+  
+  setIsResetting(true);
+
+  const tl = gsap.timeline({
+    onStart: () => {
+      // console.log('🟡 Timeline STARTED');
+    },
+    onUpdate: () => {
+      // console.log('🟢 Timeline UPDATING');
+    },
+    onComplete: () => {
+      // console.log('🔵 Timeline COMPLETED');
+      setTimeout(() => {
+        resetInterview();
+        setIsResetting(false);
+      }, 100);
+    },
+  });
+
+  tl.to(".chat-content", {
+    opacity: 0,
+    duration: 0.3,
+    ease: "power3.in",
+    // onStart: () => console.log('Chat fading...'),
+    // onComplete: () => console.log('Chat faded!'),
+  }).to(
+    ".banner-col-reset",
+    {
+      yPercent: 0,
+      duration: 0.8,
       stagger: 0.1,
-      duration: 0.6,
-      ease: "power3.in",
-    }).from(
-      ".chat-content",
-      {
-        opacity: 0,
-        y: 50,
-        duration: 0.4,
-      },
-      "<"
-    ); // Run at the same time
-  };
+      ease: "power3.inOut",
+      // onStart: () => {
+      //   console.log('Banners animating...');
+      //   console.log('Initial yPercent:', gsap.getProperty('.banner-col-reset', 'yPercent'));
+      // },
+      // onUpdate: function() {
+      //   console.log('Current yPercent:', gsap.getProperty('.banner-col-reset', 'yPercent'));
+      // },
+      // onComplete: () => console.log('Banners done!'),
+    },
+    "-=0.1"
+  );
+};
 
-  if (survey.isCompleted) {
-    return (
-      // 1. MAIN CONTAINER: Full Screen & Relative
-      <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center pb-20">
-        <div className="relative z-10 w-full flex items-center justify-center px-4 pointer-events-none">
-          
-          
-        <InterviewBackground />
-        <div className="absolute inset-0 flex w-full h-full z-0 pointer-events-none">
-            {/* We create 4 columns, each 1/4 width */}
-            <div className="banner-col-chat w-1/4 h-full bg-white " />
-            <div className="banner-col-chat w-1/4 h-full bg-white" />
-            <div className="banner-col-chat w-1/4 h-full bg-white " />
-            <div className="banner-col-chat w-1/4 h-full bg-white" />
-          </div>
-        
+useEffect(() => {
+  // Hide banners on mount
+  gsap.set(".banner-col-reset", { yPercent: 100 });
+}, []);
 
-          <Card className="chat-card-container chat-content pointer-events-auto w-full max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
-            <div className="flex h-full flex-col z-10 relative w-full">
-              <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
-                <ConversationContent className="p-2 md:p-4 space-y-4">
-                  {callEnd ? (
-                    <div ref={orbRef}>
-                      <ConversationEmptyState
-                        icon={
-                          <Orb
-                            className="size-25 orb-ref"
-                            agentState="listening"
-                            containerClassName=""
-                          />
-                        }
-                        title="Are You Ready?"
-                        description="Your interview session is ready. Click start to begin."
-                        className="flex justify-center items-center"
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      {console.log(message)}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-10 w-full max-w-5xl mx-auto">
-                        {/* CARD 1 */}
-                        <div className="border border-zinc-700 rounded-xl bg-zinc-900/50 flex justify-center items-center aspect-video overflow-hidden shadow-lg">
-                          <Orb
-                            className="w-full h-[85%] object-cover"
-                            agentState={orbState}
-                          />
-                        </div>
+  return (
+    <>
+      <div className="fixed inset-0 flex w-full h-full z-[100] pointer-events-none">
+        {/* We create 4 columns, each 1/4 width */}
+        <div className="banner-col-reset w-1/4 h-full bg-white  " />
+        <div className="banner-col-reset w-1/4 h-full bg-white " />
+        <div className="banner-col-reset w-1/4 h-full bg-white  " />
+        <div className="banner-col-reset w-1/4 h-full bg-white" />
+      </div>
 
-                        {/* CARD 2 */}
-                        <div className="border border-zinc-700 rounded-xl bg-zinc-900/50 flex justify-center items-center aspect-video overflow-hidden shadow-lg">
-                          <video
-                            ref={videoRef}
-                            muted
-                            className="w-full h-full object-cover transform -scale-x-100"
-                            playsInline
-                            autoPlay
-                          />
-                        </div>
+      {survey.isCompleted || isResetting ? (
+        // 1. MAIN CONTAINER: Full Screen & Relative
+
+        <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center pb-20">
+          <InterviewBackground />
+          <div className="relative z-10 w-full flex items-center justify-center px-4 pointer-events-none chat-content">
+            <Card className="chat-card-container pointer-events-auto w-full max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+              <div className="flex h-full flex-col z-10 relative w-full">
+                <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
+                  <ConversationContent className="p-2 md:p-4 space-y-4">
+                    {callEnd ? (
+                      <div ref={orbRef}>
+                        <ConversationEmptyState
+                          icon={
+                            <Orb
+                              className="size-25 orb-ref"
+                              agentState="listening"
+                              containerClassName=""
+                            />
+                          }
+                          title="Are You Ready?"
+                          description="Your interview session is ready. Click start to begin."
+                          className="flex justify-center items-center"
+                        />
                       </div>
+                    ) : (
+                      <>
+                        {console.log(message)}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-10 w-full max-w-5xl mx-auto">
+                          {/* CARD 1 */}
+                          <div className="border border-zinc-700 rounded-xl bg-zinc-900/50 flex justify-center items-center aspect-video overflow-hidden shadow-lg">
+                            <Orb
+                              className="w-full h-[85%] object-cover"
+                              agentState={orbState}
+                            />
+                          </div>
 
-                      {message.length > 0 && (
-                        <div className="text-center pt-12">
-                          <p className="text-white">
-                            {message[message.length - 1].text}
-                          </p>
+                          {/* CARD 2 */}
+                          <div className="border border-zinc-700 rounded-xl bg-zinc-900/50 flex justify-center items-center aspect-video overflow-hidden shadow-lg">
+                            <video
+                              ref={videoRef}
+                              muted
+                              className="w-full h-full object-cover transform -scale-x-100"
+                              playsInline
+                              autoPlay
+                            />
+                          </div>
                         </div>
-                      )}
-                    </>
-                  )}
-                </ConversationContent>
-                <ConversationScrollButton />
-              </Conversation>
 
-              <CodeInterface
-                onSubmit={handleCodeSubmit}
-                isOpen={codingMode}
-                onClose={() => setCodingMode(false)}
-              />
-
-              {/* DEDICATED CONTROLS FOOTER */}
-              <div className="w-full flex justify-center p-4 z-20">
-                <div className="flex items-center justify-between gap-4 px-5 py-3 bg-[#09090b]/60 border border-white/10 rounded-full shadow-2xl w-full max-w-md">
-                  {/* Status Indicator */}
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div
-                        className={cn(
-                          "w-3 h-3 rounded-full transition-all duration-500",
-                          connectionStatus === "active"
-                            ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]"
-                            : connectionStatus === "idle"
-                            ? "bg-zinc-600 animate-pulse"
-                            : "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.6)]",
-                          (connectionStatus === "active" ||
-                            connectionStatus === "connecting") &&
-                            "animate-pulse"
+                        {message.length > 0 && (
+                          <div className="text-center pt-12">
+                            <p className="text-white">
+                              {message[message.length - 1].text}
+                            </p>
+                          </div>
                         )}
-                      />
-                      {(connectionStatus === "active" ||
-                        connectionStatus === "listening") && (
-                        <div className="absolute inset-0 w-3 h-3 rounded-full bg-emerald-500 animate-ping opacity-40" />
-                      )}
-                      {connectionStatus === "connecting" && (
-                        <div className="absolute inset-0 w-3 h-3 rounded-full bg-amber-500 animate-pulse opacity-60" />
-                      )}
-                      {connectionStatus === "idle" && (
-                        <div className="absolute inset-0 w-3 h-3 rounded-full bg-zinc-600/30 animate-pulse" />
-                      )}
+                      </>
+                    )}
+                  </ConversationContent>
+                  <ConversationScrollButton />
+                </Conversation>
+
+                <CodeInterface
+                  onSubmit={handleCodeSubmit}
+                  isOpen={codingMode}
+                  onClose={() => setCodingMode(false)}
+                />
+
+                {/* DEDICATED CONTROLS FOOTER */}
+                <div className="w-full flex justify-center p-4 z-20">
+                  <div className="flex items-center justify-between gap-4 px-5 py-3 bg-[#09090b]/60 border border-white/10 rounded-full shadow-2xl w-full max-w-md">
+                    {/* Status Indicator */}
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div
+                          className={cn(
+                            "w-3 h-3 rounded-full transition-all duration-500",
+                            connectionStatus === "active"
+                              ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+                              : connectionStatus === "idle"
+                              ? "bg-zinc-600 animate-pulse"
+                              : "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.6)]",
+                            (connectionStatus === "active" ||
+                              connectionStatus === "connecting") &&
+                              "animate-pulse"
+                          )}
+                        />
+                        {(connectionStatus === "active" ||
+                          connectionStatus === "listening") && (
+                          <div className="absolute inset-0 w-3 h-3 rounded-full bg-emerald-500 animate-ping opacity-40" />
+                        )}
+                        {connectionStatus === "connecting" && (
+                          <div className="absolute inset-0 w-3 h-3 rounded-full bg-amber-500 animate-pulse opacity-60" />
+                        )}
+                        {connectionStatus === "idle" && (
+                          <div className="absolute inset-0 w-3 h-3 rounded-full bg-zinc-600/30 animate-pulse" />
+                        )}
+                      </div>
+                      <span
+                        className={cn(
+                          "text-sm font-semibold hidden sm:inline transition-colors duration-300",
+                          connectionStatus === "active"
+                            ? "text-emerald-400"
+                            : connectionStatus === "idle"
+                            ? "text-zinc-500"
+                            : "text-amber-400 font-bold"
+                        )}
+                      >
+                        {connectionStatus === "idle"
+                          ? "Idle"
+                          : connectionStatus === "active"
+                          ? "Listening"
+                          : "Connecting"}
+                      </span>
                     </div>
-                    <span
-                      className={cn(
-                        "text-sm font-semibold hidden sm:inline transition-colors duration-300",
-                        connectionStatus === "active"
-                          ? "text-emerald-400"
-                          : connectionStatus === "idle"
-                          ? "text-zinc-500"
-                          : "text-amber-400 font-bold"
-                      )}
-                    >
-                      {connectionStatus === "idle"
-                        ? "Idle"
-                        : connectionStatus === "active"
-                        ? "Listening"
-                        : "Connecting"}
-                    </span>
-                  </div>
 
-                  <div className="flex-1 max-w-[200px]">
-                    <VoicePicker
-                      value={selectedVoice}
-                      onValueChange={setSelectedVoice}
-                      disabled={!callEnd}
-                    />
-                  </div>
+                    <div className="flex-1 max-w-[200px]">
+                      <VoicePicker
+                        value={selectedVoice}
+                        onValueChange={setSelectedVoice}
+                        disabled={!callEnd}
+                      />
+                    </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      disabled={callEnd}
-                      className={`p-2.5 rounded-full transition-all duration-200 ${
-                        callEnd
-                          ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                          : isMuted
-                          ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                          : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-                      }`}
-                    >
-                      {isMuted ? (
-                        <MicOff className="w-5 h-5" />
-                      ) : (
-                        <Mic className="w-5 h-5" />
-                      )}
-                    </button>
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        disabled={callEnd}
+                        className={`p-2.5 rounded-full transition-all duration-200 ${
+                          callEnd
+                            ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                            : isMuted
+                            ? "bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                            : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                        }`}
+                      >
+                        {isMuted ? (
+                          <MicOff className="w-5 h-5" />
+                        ) : (
+                          <Mic className="w-5 h-5" />
+                        )}
+                      </button>
 
-                    <div
-                      ref={callContainerRef}
-                      className="relative flex justify-between"
-                    >
-                      {!callEnd ? (
-                        <button
-                          onClick={endCall}
-                          ref={buttonRef}
-                          className="end-btn px-5 py-2.5 bg-red-500 text-black text-sm font-medium rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg shadow-red-500/25"
-                        >
-                          End Call
-                        </button>
-                      ) : (
-                        <button
-                          onClick={startAgent}
-                          ref={buttonRef}
-                          className="start-btn px-5 py-2.5 bg-emerald-500 text-black text-sm font-medium rounded-full hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
-                        >
-                          Start Call
-                        </button>
-                      )}
+                      <div
+                        ref={callContainerRef}
+                        className="relative flex justify-between"
+                      >
+                        {!callEnd ? (
+                          <button
+                            onClick={endCall}
+                            ref={buttonRef}
+                            className="end-btn px-5 py-2.5 bg-red-500 text-black text-sm font-medium rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg shadow-red-500/25"
+                          >
+                            End Call
+                          </button>
+                        ) : (
+                          <button
+                            onClick={startAgent}
+                            ref={buttonRef}
+                            className="start-btn px-5 py-2.5 bg-emerald-500 text-black text-sm font-medium rounded-full hover:bg-emerald-600 transition-all duration-200 shadow-lg shadow-emerald-500/25"
+                          >
+                            Start Call
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </Card>
-        </div>
-        {!callEnd && <CallNav />}
-      </div>
-    );
-  }
-
-  // hero and wagera wagera
-  return (
-    <WavyBackground className="p-4">
-      <div className="font-bold text-4xl md:text-5xl lg:text-[68px]  mb-6 text-center tracking-tight z-10">
-        <h1 className="heroText">
-          <span>Master Your</span>{" "}
-          <span className="text-blue-400">Next Interview.</span>
-        </h1>
-      </div>
-
-      {/* 2. Description - Removed 'relative bottom-12', used standard margins */}
-      <div className="text-sm md:text-lg text-center text-gray-200 leading-relaxed max-w-2xl mx-auto mb-8 px-4 z-10">
-        <p className="subtitleText">
-          An autonomous interview agent that listens, processes, and speaks.
-          Built with SLMs for rapid reasoning and realistic speech interaction.
-        </p>
-      </div>
-
-      {/* pills */}
-      <div className="gap-3 flex justify-center items-center mb-5 z-10 techPills">
-        <HoverBorderGradient
-          containerClassName="rounded-full"
-          as="button"
-          className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 text-xs font-semibold px-4 py-1.5 transition-colors"
-        >
-          React
-        </HoverBorderGradient>
-
-        <HoverBorderGradient
-          containerClassName="rounded-full"
-          as="button"
-          className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 text-xs font-semibold px-4 py-1.5 transition-colors"
-        >
-          NodeJs
-        </HoverBorderGradient>
-
-        <HoverBorderGradient
-          containerClassName="rounded-full"
-          as="button"
-          className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 text-xs font-semibold px-4 py-1.5 transition-colors"
-        >
-          SLM's
-        </HoverBorderGradient>
-      </div>
-
-      <div className="flex items-center justify-center">
-        <Button
-          onClick={() => setIsProcessing(true)}
-          className="overflow-hidden "
-          onMouseEnter={() => tlRef.current?.play()}
-          onMouseLeave={() => tlRef.current?.reverse()}
-          containerClassName="pop-btn"
-        >
-          <div
-            ref={containerRef}
-            className="relative h-5 overflow-hidden flex flex-col"
-          >
-            {/* Original Text */}
-            <span className=" btn-text-1" style={{ whiteSpace: "pre" }}>
-              Get started
-            </span>
-
-            {/* Duplicate Text */}
-            <span
-              className=" absolute top-full left-0 right-0 btn-text-2"
-              style={{ whiteSpace: "pre" }}
-            >
-              Get started
-            </span>
+            </Card>
           </div>
-        </Button>
-      </div>
-      <HomeNav />
-    </WavyBackground>
+          {!callEnd && <CallNav onReset={handleReset} />}
+        </div>
+      ) : (
+        <WavyBackground className="p-4">
+          <div className="font-bold text-4xl md:text-5xl lg:text-[68px]  mb-6 text-center tracking-tight z-10">
+            <h1 className="heroText">
+              <span>Master Your</span>{" "}
+              <span className="text-blue-400">Next Interview.</span>
+            </h1>
+          </div>
+
+          {/* 2. Description - Removed 'relative bottom-12', used standard margins */}
+          <div className="text-sm md:text-lg text-center text-gray-200 leading-relaxed max-w-2xl mx-auto mb-8 px-4 z-10">
+            <p className="subtitleText">
+              An autonomous interview agent that listens, processes, and speaks.
+              Built with SLMs for rapid reasoning and realistic speech
+              interaction.
+            </p>
+          </div>
+
+          {/* pills */}
+          <div className="gap-3 flex justify-center items-center mb-5 z-10 techPills">
+            <HoverBorderGradient
+              containerClassName="rounded-full"
+              as="button"
+              className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 text-xs font-semibold px-4 py-1.5 transition-colors"
+            >
+              React
+            </HoverBorderGradient>
+
+            <HoverBorderGradient
+              containerClassName="rounded-full"
+              as="button"
+              className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 text-xs font-semibold px-4 py-1.5 transition-colors"
+            >
+              NodeJs
+            </HoverBorderGradient>
+
+            <HoverBorderGradient
+              containerClassName="rounded-full"
+              as="button"
+              className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 text-xs font-semibold px-4 py-1.5 transition-colors"
+            >
+              SLM's
+            </HoverBorderGradient>
+          </div>
+
+          <div className="flex items-center justify-center">
+            <Button
+              onClick={() => setIsProcessing(true)}
+              className="overflow-hidden "
+              onMouseEnter={() => tlRef.current?.play()}
+              onMouseLeave={() => tlRef.current?.reverse()}
+              containerClassName="pop-btn"
+            >
+              <div
+                ref={containerRef}
+                className="relative h-5 overflow-hidden flex flex-col"
+              >
+                {/* Original Text */}
+                <span className=" btn-text-1" style={{ whiteSpace: "pre" }}>
+                  Get started
+                </span>
+
+                {/* Duplicate Text */}
+                <span
+                  className=" absolute top-full left-0 right-0 btn-text-2"
+                  style={{ whiteSpace: "pre" }}
+                >
+                  Get started
+                </span>
+              </div>
+            </Button>
+          </div>
+          <HomeNav />
+        </WavyBackground>
+      )}
+    </>
   );
 }
+
+// hero and wagera wagera
 
 export default ChatConversation;

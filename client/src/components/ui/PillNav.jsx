@@ -218,6 +218,16 @@ const PillNav = ({
 
   const isRouterLink = href => href && !isExternalLink(href);
 
+  const handleItemClick = (e, item) => {
+    console.log("item clicked:", item.label)
+    if (item.label === "Reset Interview") {
+      console.log("calling reset func")
+      e.preventDefault(); // Prevent navigation
+      onReset(); // Call the reset function
+      return
+    }
+  };
+
   const cssVars = {
     ['--base']: baseColor,
     ['--pill-bg']: pillColor,
@@ -309,7 +319,7 @@ const PillNav = ({
                       aria-label={item.ariaLabel || item.label}
                       onMouseEnter={() => handleEnter(i)}
                       onMouseLeave={() => handleLeave(i)}
-                      onClick={onReset}
+                      onClick={(e) => handleItemClick(e, item)}
                       >       
                       {PillContent}                   
                     </button>
