@@ -115,7 +115,7 @@ function SurveyModal() {
       {isProcessing && currentStep < 5 && (
         <div
           ref={containerRef}
-          className="fixed inset-0 z-50 flex w-screen h-screen overflow-hidden"
+          className="fixed inset-0 z-200 flex w-screen h-screen overflow-hidden"
         >
           {resettingMode ? (
             <div className="absolute inset-0 flex flex-col w-full h-full z-0 pointer-events-none">

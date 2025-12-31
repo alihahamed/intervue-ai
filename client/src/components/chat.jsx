@@ -646,6 +646,7 @@ function ChatConversation() {
     const tl = gsap.timeline({
       onComplete: () => {
         resetInterview(); // Triggers the state change to show SurveyModal
+        endCall()
       },
     });
 
