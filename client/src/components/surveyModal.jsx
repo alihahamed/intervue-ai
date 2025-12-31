@@ -69,7 +69,6 @@ function SurveyModal() {
     const tl = gsap.timeline({
       onComplete: () => {
         setCurrentStep((prev) => prev + 1);
-        gsap.set(".banner-col-reset", { yPercent: 100 });
       },
     });
 

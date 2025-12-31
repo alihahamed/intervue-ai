@@ -454,7 +454,6 @@ function ChatConversation() {
 
       const { instructions } = await instructionsResponse.json();
       const { key } = await tokenResponse.json();
-      
 
       // B. Prepare History
       const historyMessages = messagesRef.current
@@ -641,59 +640,23 @@ function ChatConversation() {
 
   // show the interview interface if survey is completed
 
- const handleReset = () => {
-  // console.log('🔴 RESET CLICKED');
-  // console.log('Banner elements:', document.querySelectorAll('.banner-col-reset'));
-  gsap.set(".banner-col-reset", { yPercent: 100 });
-  
-  setIsResetting(true);
+  const handleReset = () => {
+    
 
-  const tl = gsap.timeline({
-    onStart: () => {
-      // console.log('🟡 Timeline STARTED');
-    },
-    onUpdate: () => {
-      // console.log('🟢 Timeline UPDATING');
-    },
-    onComplete: () => {
-      // console.log('🔵 Timeline COMPLETED');
-      setTimeout(() => {
-        resetInterview();
-        setIsResetting(false);
-      }, 100);
-    },
-  });
+    setIsResetting(true);
+    const tl = gsap.timeline({
+      onComplete: () => {
+        resetInterview()
+      }
+    })
 
-  tl.to(".chat-content", {
-    opacity: 0,
-    duration: 0.3,
-    ease: "power3.in",
-    // onStart: () => console.log('Chat fading...'),
-    // onComplete: () => console.log('Chat faded!'),
-  }).to(
-    ".banner-col-reset",
-    {
-      yPercent: 0,
-      duration: 0.8,
-      stagger: 0.1,
-      ease: "power3.inOut",
-      // onStart: () => {
-      //   console.log('Banners animating...');
-      //   console.log('Initial yPercent:', gsap.getProperty('.banner-col-reset', 'yPercent'));
-      // },
-      // onUpdate: function() {
-      //   console.log('Current yPercent:', gsap.getProperty('.banner-col-reset', 'yPercent'));
-      // },
-      // onComplete: () => console.log('Banners done!'),
-    },
-    "-=0.1"
-  );
-};
+    
+  };
 
-useEffect(() => {
-  // Hide banners on mount
-  gsap.set(".banner-col-reset", { yPercent: 100 });
-}, []);
+  useEffect(() => {
+    // Hide banners on mount
+    gsap.set(".banner-col-reset", { yPercent: 100 });
+  }, []);
 
   return (
     <>
