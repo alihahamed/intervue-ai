@@ -641,34 +641,44 @@ function ChatConversation() {
   // show the interview interface if survey is completed
 
   const handleReset = () => {
-    
+   
 
-    setIsResetting(true);
     const tl = gsap.timeline({
       onComplete: () => {
-        resetInterview()
-      }
-    })
+        resetInterview(); // Triggers the state change to show SurveyModal
+      },
+    });
 
-    
+    // 1. Top Shutter: Moves DOWN (from -100% to 0)
+    tl.to(".shutter-top", {
+      yPercent: 100, 
+      duration: 0.8,
+      ease: "power3.inOut",
+    })
+    // 2. Bottom Shutter: Moves UP (from 100% to 0)
+    .to(".shutter-bottom", {
+      yPercent: -100, 
+      duration: 0.8,
+      ease: "power3.inOut",
+    },"<") // Runs simultaneously with top shutter
   };
 
-  useEffect(() => {
-    // Hide banners on mount
-    gsap.set(".banner-col-reset", { yPercent: 100 });
-  }, []);
+  // useEffect(() => {
+  //   // Hide banners on mount
+  //   gsap.set(".banner-col-reset", { yPercent: 100 });
+  // }, []);
 
   return (
     <>
-      <div className="fixed inset-0 flex w-full h-full z-[100] pointer-events-none">
-        {/* We create 4 columns, each 1/4 width */}
-        <div className="banner-col-reset w-1/4 h-full bg-white  " />
-        <div className="banner-col-reset w-1/4 h-full bg-white " />
-        <div className="banner-col-reset w-1/4 h-full bg-white  " />
-        <div className="banner-col-reset w-1/4 h-full bg-white" />
+      <div className="fixed inset-0 w-full h-full z-[100] pointer-events-none flex flex-col">
+        {/* Top Shutter: Starts hidden ABOVE the screen */}
+        <div className="shutter-top w-full h-1/2 bg-white -translate-y-full" />
+        
+        {/* Bottom Shutter: Starts hidden BELOW the screen */}
+        <div className="shutter-bottom w-full h-1/2 bg-white translate-y-full" />
       </div>
 
-      {survey.isCompleted || isResetting ? (
+      {survey.isCompleted ? (
         // 1. MAIN CONTAINER: Full Screen & Relative
 
         <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center pb-20">

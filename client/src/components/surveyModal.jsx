@@ -16,7 +16,7 @@ import gsap from "gsap";
 
 function SurveyModal() {
   const [currentStep, setCurrentStep] = useState(1);
-  const { survey, setSurvey, setIsProcessing, isProcessing } = useChat();
+  const { survey, setSurvey, setIsProcessing, isProcessing, resettingMode } = useChat();
 
   const expRef = useRef(null);
   const stackRef = useRef(null);
@@ -46,23 +46,29 @@ function SurveyModal() {
 
   useGSAP(() => {
     const tl = gsap.timeline();
-
-    tl.from(".banner-col", {
-      yPercent: 100,
-      duration: 0.8,
-      stagger: 0.1,
-      ease: "power3.inOut",
-    }).from(
-      ".modal-content",
-      {
+    if(resettingMode) {
+      tl.from(".modal-content", {
+        y: 100,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out",
+        delay: 0.2 // Small delay for smoothness
+      });
+    } else {
+      // === HOME MODE (Original 4 Banners) ===
+      tl.from(".banner-col", {
+        yPercent: 100,
+        duration: 0.8,
+        stagger: 0.1,
+        ease: "power3.inOut",
+      }).from(".modal-content", {
         opacity: 0,
         yPercent: 100,
         duration: 0.6,
         ease: "power3.out",
-      },
-      "-=0.4"
-    );
-  }, [isProcessing]); // when is processing is true this animation runs
+      }, "-=0.4");
+    } 
+  }, [isProcessing, resettingMode]); // when is processing is true this animation runs
 
   const handleExit = () => {
     setSurvey({ ...survey, isCompleted: true }); // if isCompleted is true, the chat card will appear and the modal will fade out
@@ -111,9 +117,15 @@ function SurveyModal() {
           ref={containerRef}
           className="fixed inset-0 z-50 flex w-screen h-screen overflow-hidden"
         >
-          {/* =========================================
-              THE 4 BANNERS (Background Layer)
-             ========================================= */}
+          {resettingMode ? (
+            <div className="absolute inset-0 flex flex-col w-full h-full z-0 pointer-events-none">
+             <div className="w-full h-1/2 bg-white" />
+             <div className="w-full h-1/2 bg-white" />
+           </div>
+          ) : (
+            // =========================================
+            //   THE 4 BANNERS (Background Layer)
+            //  ========================================= */}
           <div className="absolute inset-0 flex w-full h-full z-0 pointer-events-none">
             {/* We create 4 columns, each 1/4 width */}
             <div className="banner-col w-1/4 h-full bg-white " />
@@ -121,7 +133,8 @@ function SurveyModal() {
             <div className="banner-col w-1/4 h-full bg-white" />
             <div className="banner-col w-1/4 h-full bg-white" />
           </div>
-
+          )}
+          {/* 
           {/* =========================================
               CONTENT WRAPPER (z-10 to sit on top)
              ========================================= */}

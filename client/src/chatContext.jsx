@@ -7,6 +7,7 @@ export const ChatProvider = ({ children }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectNiche, setSelectNiche] = useState("Hooks");
   const [codingMode, setCodingMode] = useState(false)
+  const [resettingMode, setResettingMode] = useState(false)
  
 
   const [survey, setSurvey] = useState(() => {
@@ -42,6 +43,7 @@ export const ChatProvider = ({ children }) => {
   }
   
   const resetInterview = () => {
+    setResettingMode(true) // for the 2 banner animation we add a flag
     const defaultState = {
       userName: "",
       experience: "",
@@ -87,7 +89,8 @@ export const ChatProvider = ({ children }) => {
         resetInterview,
         codingMode,
         setCodingMode,
-        
+        resettingMode,
+        setResettingMode
       }}
     >
       {children}
