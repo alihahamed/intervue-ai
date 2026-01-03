@@ -367,6 +367,10 @@ export default function FloatingLines({
 
     const setSize = () => {
       const el = containerRef.current;
+      
+      // 🛑 CRITICAL FIX: Stop execution if the element is gone
+      if (!el) return;
+
       const width = el.clientWidth || 1;
       const height = el.clientHeight || 1;
 

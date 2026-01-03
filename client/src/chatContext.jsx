@@ -6,26 +6,28 @@ export const ChatProvider = ({ children }) => {
   const [message, setMessage] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectNiche, setSelectNiche] = useState("Hooks");
-  const [codingMode, setCodingMode] = useState(false)
-  const [resettingMode, setResettingMode] = useState(false)
- 
+  const [codingMode, setCodingMode] = useState(false);
+  const [resettingMode, setResettingMode] = useState(false);
 
   const [survey, setSurvey] = useState(() => {
-    const surveyData = localStorage.getItem("surveyData") // find the data from local storage
+    const surveyData = localStorage.getItem("surveyData"); // find the data from local storage
 
-    return surveyData ? JSON.parse(surveyData)  : { // unpacks the survey to use the items inside
-      userName: "Ali",
-      experience: "",
-      techStack: "",
-      targetRole: "",
-      isCompleted: false,
-      agentName:""
-    }
-  })
+    return surveyData
+      ? JSON.parse(surveyData)
+      : {
+          // unpacks the survey to use the items inside
+          userName: "Ali",
+          experience: "",
+          techStack: "",
+          targetRole: "",
+          isCompleted: false,
+          agentName: "",
+        };
+  });
 
   useEffect(() => {
-    localStorage.setItem("surveyData", JSON.stringify(survey)) // converts the survey object into a string
-  }, [survey])
+    localStorage.setItem("surveyData", JSON.stringify(survey)); // converts the survey object into a string
+  }, [survey]);
 
   const addMessage = (sender, text, audioBase64 = null) => {
     setMessage((prev) => [
@@ -39,23 +41,25 @@ export const ChatProvider = ({ children }) => {
   };
 
   const deleteMessage = () => {
-    setMessage([])
-  }
-  
+    setMessage([]);
+  };
+
   const resetInterview = () => {
-    setResettingMode(true) // for the 2 banner animation we add a flag
+    // for the 2 banner animation we add a flag
+    setMessage([]);
+    setIsProcessing(true);
+    setResettingMode(true);
     const defaultState = {
       userName: "",
       experience: "",
       techStack: "",
       targetRole: "",
-      isCompleted: false
-    }
-    setSurvey(defaultState)
-    setMessage([])
-    setIsProcessing(true)
-    localStorage.removeItem("surveyData")
-  }
+      isCompleted: false,
+    };
+    setSurvey(defaultState);
+
+    localStorage.removeItem("surveyData");
+  };
 
   const handleOptionUpdate = (option) => {
     setMessage((prev) => {
@@ -90,7 +94,7 @@ export const ChatProvider = ({ children }) => {
         codingMode,
         setCodingMode,
         resettingMode,
-        setResettingMode
+        setResettingMode,
       }}
     >
       {children}

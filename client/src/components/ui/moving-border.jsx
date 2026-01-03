@@ -79,14 +79,26 @@ export const MovingBorder = ({
     }
   });
 
-  const x = useTransform(
-    progress,
-    (val) => pathRef.current?.getPointAtLength(val).x
-  );
-  const y = useTransform(
-    progress,
-    (val) => pathRef.current?.getPointAtLength(val).y
-  );
+  const x = useTransform(progress, (val) => {
+    // 1. Check if the element exists
+    if (!pathRef.current) return 0;
+    
+    // 2. Check if the element has calculated dimensions (length)
+    // This prevents the "InvalidStateError"
+    const length = pathRef.current.getTotalLength();
+    if (!length) return 0;
+
+    return pathRef.current.getPointAtLength(val).x;
+  });
+
+  const y = useTransform(progress, (val) => {
+    if (!pathRef.current) return 0;
+    
+    const length = pathRef.current.getTotalLength();
+    if (!length) return 0;
+
+    return pathRef.current.getPointAtLength(val).y;
+  });
 
   const transform = useMotionTemplate`translateX(${x}px) translateY(${y}px) translateX(-50%) translateY(-50%)`;
 
