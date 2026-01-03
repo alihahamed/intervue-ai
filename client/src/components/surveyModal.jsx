@@ -140,12 +140,18 @@ function SurveyModal() {
     if (resettingMode) {
         console.log("👋 Reset Exit");
         // Animate the static white background shutters out
-        tl.to(".static-shutter", {
-            scaleY: 0,
-            transformOrigin: "center",
-            duration: 0.5,
-            ease: "power3.inOut"
-        });
+        tl.to(".shutter-top-exit", {
+        yPercent: -100,
+        duration: 0.8,
+        ease: "power3.inOut"
+      }, "<+=0.1"); // Start slightly after content begins fading
+
+      // Bottom goes Down (100%)
+      tl.to(".shutter-bottom-exit", {
+        yPercent: 100,
+        duration: 0.8,
+        ease: "power3.inOut"
+      }, "<"); // Run at the same time as top shutter
     } else {
         console.log("👋 Home Exit");
         tl.to(".banner-col", {
@@ -180,9 +186,9 @@ function SurveyModal() {
         >
           {resettingMode ? (
             // === RESET BACKGROUND (Static White) ===
-            <div className="absolute inset-0 flex flex-col w-full h-full z-0 pointer-events-none">
-              <div className="static-shutter w-full h-1/2 bg-white" />
-              <div className="static-shutter w-full h-1/2 bg-white" />
+            <div className="absolute inset-0 flex flex-col w-full h-full z-0 pointer-events-none zz">
+              <div className="static-shutter shutter-top-exit w-full h-1/2 bg-white" />
+              <div className="static-shutter shutter-bottom-exit w-full h-1/2 bg-white" />
             </div>
           ) : (
             // === HOME BACKGROUND (Dynamic Banners) ===
@@ -196,7 +202,7 @@ function SurveyModal() {
 
           {/* === CONTENT === */}
           {/* Added opacity-0 default so it doesn't flash before GSAP catches it */}
-          <div className="modal-content relative z-10 flex w-full h-full opacity-0">
+          <div className="modal-content relative z-[200]  flex w-full h-full opacity-0">
             {/* LEFT COLUMN: Form */}
             <div className="w-full lg:w-1/2 h-full flex flex-col justify-between p-8 sm:p-16 relative">
               <div className="w-full max-w-lg flex flex-col gap-6 mt-auto">

@@ -659,7 +659,7 @@ function ChatConversation() {
       },
     });
 
-    // Animate shutters safely
+    // Animate entrance shutters safely
     tl.to(".shutter-top", {
       yPercent: 100,
       duration: 0.8,
@@ -672,13 +672,21 @@ function ChatConversation() {
     }, "<");
   }, [endCall, resetInterview,]);
 
+  useGSAP(() => {
+    if(survey.isCompleted) {
+      console.log("removing shutter properties")
+      gsap.set([".shutter-top", ".shutter-bottom"], {clearProps:"all"})
+      
+    }
+  }, [survey.isCompleted])
+
   return (
     // 4. MAIN CONTAINER (Replaces Fragment) for GSAP Scoping
     <div ref={mainContainerRef} className="w-full h-full">
       
       {/* === GLOBAL SHUTTERS (Z-100) === */}
       {/* These exist permanently so they persist across the state change */}
-      <div className="fixed inset-0 w-full h-full z-200 pointer-events-none flex flex-col">
+      <div className="fixed inset-0 w-full h-full z-100 pointer-events-none flex flex-col">
         <div className="shutter-top w-full h-1/2 bg-white -translate-y-full will-change-transform" />
         <div className="shutter-bottom w-full h-1/2 bg-white translate-y-full will-change-transform" />
       </div>
