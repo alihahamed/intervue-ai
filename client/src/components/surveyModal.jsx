@@ -126,6 +126,7 @@ function SurveyModal() {
     const tl = gsap.timeline({
       onComplete: () => {
         setCurrentStep(1);
+        setIsProcessing(false)
       },
     });
 
