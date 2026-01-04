@@ -54,6 +54,8 @@ function CodeInterface({ onSubmit, onClose, isOpen }) {
   }
 
   if (isOpen) {
+    console.log("isOpen state", isOpen)
+    console.log("coding state", codingMode)
     return (
       <div
         ref={containerRef}
@@ -103,7 +105,7 @@ function CodeInterface({ onSubmit, onClose, isOpen }) {
               </div>
 
               <button
-                onClick={() => handleExit}
+                onClick={handleExit}
                 className="group flex items-center gap-2 text-zinc-500 hover:text-white transition-colors"
               >
                 <span className="text-[10px] uppercase font-bold tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">

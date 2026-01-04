@@ -35,6 +35,7 @@ import ghost from "../assets/ghost.png";
 import PillNav from "./ui/PillNav";
 import { VoicePicker } from "./voicePicker";
 import CodeInterface from "./codeInterface";
+import logo from "../assets/intervue-logo.png";
 
 const InterviewBackground = React.memo(() => {
   return (
@@ -103,7 +104,7 @@ function ChatConversation() {
     codingMode,
     resetInterview,
     interview,
-    resettingMode
+    resettingMode,
   } = useChat();
 
   // gsap animations
@@ -118,7 +119,7 @@ function ChatConversation() {
   const callContainerRef = useRef(null);
   const buttonRef = useRef(null);
   const [isResetting, setIsResetting] = useState(false);
-  const mainContainerRef = useRef(null)
+  const mainContainerRef = useRef(null);
 
   // component mount animation when page loads
 
@@ -603,9 +604,9 @@ function ChatConversation() {
                   "Coding mode enabled. The user is now seeing the code box.",
               };
               // console.log("function response", JSON.stringify(response));
-              console.log(
-                "succesfully recieved the function call, coding mode enabled"
-              );
+              // console.log(
+              //   "succesfully recieved the function call, coding mode enabled"
+              // );
               socketRef.current.send(JSON.stringify(response));
             }
           }
@@ -640,6 +641,10 @@ function ChatConversation() {
     }
   };
 
+  const handleCodeExit = () => {
+    setCodingMode(false);
+  };
+
   // show the interview interface if survey is completed
 
   const handleReset = useCallback(() => {
@@ -649,13 +654,13 @@ function ChatConversation() {
     const tl = gsap.timeline({
       onComplete: () => {
         console.log("✅ Shutters Closed. Triggering State Reset...");
-        
+
         // 1. End the Call (Media cleanup)
         endCall();
-        
+
         // 2. Trigger Context Switch
         // This MUST set: resettingMode=true, isProcessing=true, survey.isCompleted=false
-        resetInterview()
+        resetInterview();
       },
     });
 
@@ -664,26 +669,27 @@ function ChatConversation() {
       yPercent: 100,
       duration: 0.8,
       ease: "power3.inOut",
-    })
-    .to(".shutter-bottom", {
-      yPercent: -100,
-      duration: 0.8,
-      ease: "power3.inOut",
-    }, "<");
-  }, [endCall, resetInterview,]);
+    }).to(
+      ".shutter-bottom",
+      {
+        yPercent: -100,
+        duration: 0.8,
+        ease: "power3.inOut",
+      },
+      "<"
+    );
+  }, [endCall, resetInterview]);
 
   useGSAP(() => {
-    if(survey.isCompleted) {
-      console.log("removing shutter properties")
-      gsap.set([".shutter-top", ".shutter-bottom"], {clearProps:"all"})
-      
+    if (survey.isCompleted) {
+      console.log("removing shutter properties");
+      gsap.set([".shutter-top", ".shutter-bottom"], { clearProps: "all" });
     }
-  }, [survey.isCompleted])
+  }, [survey.isCompleted]);
 
   return (
     // 4. MAIN CONTAINER (Replaces Fragment) for GSAP Scoping
     <div ref={mainContainerRef} className="w-full h-full">
-      
       {/* === GLOBAL SHUTTERS (Z-100) === */}
       {/* These exist permanently so they persist across the state change */}
       <div className="fixed inset-0 w-full h-full z-100 pointer-events-none flex flex-col">
@@ -692,85 +698,151 @@ function ChatConversation() {
       </div>
 
       {survey.isCompleted ? (
-        // === CHAT VIEW ===
-        <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center pb-20">
-          <InterviewBackground />
-          <div className="relative z-10 w-full flex items-center justify-center px-4 pointer-events-none chat-content">
-            <Card className="chat-card-container pointer-events-auto w-full max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
-             {/* ... Your Chat Content ... */}
-             <div className="flex h-full flex-col z-10 relative w-full">
-                <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
-                   <ConversationContent className="p-2 md:p-4 space-y-4">
+        <>
+          <div className="absolute top-6 left-6 z-50 flex flex-col items-center gap-1 pointer-events-none select-none">
+            {/* Logo Image */}
+            <img
+              src={logo}
+              alt="Intervue AI Logo"
+              className="w-30 h-auto object-contain"
+            />
+
+            {/* Brand Name Text (Positioned Below) */}
+            <span className="text-xs font-bold tracking-[0.2em] uppercase text-white/70">
+              Intervue AI
+            </span>
+          </div>
+
+          <div className="h-screen w-screen relative bg-[#09090b] overflow-hidden flex items-center justify-center pb-20">
+            <InterviewBackground />
+            <div className="relative z-10 w-full flex items-center justify-center px-4 pointer-events-none chat-content">
+              <Card className="chat-card-container pointer-events-auto w-full max-w-5xl h-[75vh] min-h-[550px] max-h-[850px] bg-[#09090b]/80 shadow-2xl rounded-xl overflow-hidden backdrop-blur-sm flex flex-col transition-all duration-300">
+                {/* ... Your Chat Content ... */}
+                <div className="flex h-full flex-col z-10 relative w-full">
+                  <Conversation className="flex-1 overflow-y-auto overflow-x-hidden relative">
+                    <ConversationContent className="p-2 md:p-4 space-y-4">
                       {/* ... Copied exactly from your existing code ... */}
                       {callEnd ? (
                         <div ref={orbRef}>
-                           <ConversationEmptyState
-                              icon={<Orb className="size-25 orb-ref" agentState="listening" />}
-                              title="Are You Ready?"
-                              description="Your interview session is ready. Click start to begin."
-                              className="flex justify-center items-center"
-                           />
+                          <ConversationEmptyState
+                            icon={
+                              <Orb
+                                className="size-25 orb-ref"
+                                agentState="listening"
+                              />
+                            }
+                            title="Are You Ready?"
+                            description="Your interview session is ready. Click start to begin."
+                            className="flex justify-center items-center"
+                          />
                         </div>
                       ) : (
                         <>
                           {/* Video/Orb Grid */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-10 w-full max-w-5xl mx-auto">
                             <div className="border border-zinc-700 rounded-xl bg-zinc-900/50 flex justify-center items-center aspect-video overflow-hidden shadow-lg">
-                              <Orb className="w-full h-[85%] object-cover" agentState={orbState} />
+                              <Orb
+                                className="w-full h-[85%] object-cover"
+                                agentState={orbState}
+                              />
                             </div>
                             <div className="border border-zinc-700 rounded-xl bg-zinc-900/50 flex justify-center items-center aspect-video overflow-hidden shadow-lg">
-                              <video ref={videoRef} muted className="w-full h-full object-cover transform -scale-x-100" playsInline autoPlay />
+                              <video
+                                ref={videoRef}
+                                muted
+                                className="w-full h-full object-cover transform -scale-x-100"
+                                playsInline
+                                autoPlay
+                              />
                             </div>
                           </div>
                           {message.length > 0 && (
                             <div className="text-center pt-12">
-                              <p className="text-white">{message[message.length - 1].text}</p>
+                              <p className="text-white">
+                                {message[message.length - 1].text}
+                              </p>
                             </div>
                           )}
                         </>
                       )}
-                   </ConversationContent>
-                   <ConversationScrollButton />
-                </Conversation>
-                
-                <CodeInterface onSubmit={handleCodeSubmit} isOpen={codingMode} onClose={() => setCodingMode(false)} />
+                    </ConversationContent>
+                    <ConversationScrollButton />
+                  </Conversation>
 
-                {/* CONTROLS FOOTER */}
-                <div className="w-full flex justify-center p-4 z-20">
-                   <div className="flex items-center justify-between gap-4 px-5 py-3 bg-[#09090b]/60 border border-white/10 rounded-full shadow-2xl w-full max-w-md">
+                  <CodeInterface
+                    onSubmit={handleCodeSubmit}
+                    isOpen={codingMode}
+                    onClose={() => setCodingMode(false)}
+                  />
+
+                  {/* CONTROLS FOOTER */}
+                  <div className="w-full flex justify-center p-4 z-20">
+                    <div className="flex items-center justify-between gap-4 px-5 py-3 bg-[#09090b]/60 border border-white/10 rounded-full shadow-2xl w-full max-w-md">
                       {/* Status & Voice Picker (Your existing code) */}
                       <div className="flex items-center gap-3">
-                         {/* ... status indicator ... */}
-                         <div className={cn("w-3 h-3 rounded-full", connectionStatus === "active" ? "bg-emerald-500" : "bg-zinc-600")} />
-                         <span className="text-zinc-500 text-sm font-semibold">
-                            {connectionStatus === "idle" ? "Idle" : "Active"}
-                         </span>
+                        {/* ... status indicator ... */}
+                        <div
+                          className={cn(
+                            "w-3 h-3 rounded-full",
+                            connectionStatus === "active"
+                              ? "bg-emerald-500"
+                              : "bg-zinc-600"
+                          )}
+                        />
+                        <span className="text-zinc-500 text-sm font-semibold">
+                          {connectionStatus === "idle" ? "Idle" : "Active"}
+                        </span>
                       </div>
-                      
+
                       <div className="flex-1 max-w-[200px]">
-                         <VoicePicker value={selectedVoice} onValueChange={setSelectedVoice} disabled={!callEnd} />
+                        <VoicePicker
+                          value={selectedVoice}
+                          onValueChange={setSelectedVoice}
+                          disabled={!callEnd}
+                        />
                       </div>
 
                       <div className="flex items-center gap-2">
-                         <button onClick={() => setIsMuted(!isMuted)} disabled={callEnd} className="p-2.5 bg-zinc-800 rounded-full text-zinc-300">
-                            {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                         </button>
-                         <div ref={callContainerRef} className="relative">
-                            {!callEnd ? (
-                              <button onClick={endCall} ref={buttonRef} className="px-5 py-2.5 bg-red-500 text-black text-sm font-medium rounded-full">End Call</button>
-                            ) : (
-                              <button onClick={startAgent} ref={buttonRef} className="px-5 py-2.5 bg-emerald-500 text-black text-sm font-medium rounded-full">Start Call</button>
-                            )}
-                         </div>
+                        <button
+                          onClick={() => setIsMuted(!isMuted)}
+                          disabled={callEnd}
+                          className="p-2.5 bg-zinc-800 rounded-full text-zinc-300"
+                        >
+                          {isMuted ? (
+                            <MicOff className="w-5 h-5" />
+                          ) : (
+                            <Mic className="w-5 h-5" />
+                          )}
+                        </button>
+                        <div ref={callContainerRef} className="relative">
+                          {!callEnd ? (
+                            <button
+                              onClick={endCall}
+                              ref={buttonRef}
+                              className="px-5 py-2.5 bg-red-500 text-black text-sm font-medium rounded-full"
+                            >
+                              End Call
+                            </button>
+                          ) : (
+                            <button
+                              onClick={startAgent}
+                              ref={buttonRef}
+                              className="px-5 py-2.5 bg-emerald-500 text-black text-sm font-medium rounded-full"
+                            >
+                              Start Call
+                            </button>
+                          )}
+                        </div>
                       </div>
-                   </div>
+                    </div>
+                  </div>
                 </div>
-             </div>
-            </Card>
+              </Card>
+            </div>
+            {/* Use handleReset here */}
+            {!callEnd && <CallNav onReset={handleReset} />}
           </div>
-          {/* Use handleReset here */}
-          {!callEnd && <CallNav onReset={handleReset} />}
-        </div>
+        </>
       ) : (
         // === HOME VIEW ===
         <WavyBackground className="p-4">
@@ -780,7 +852,7 @@ function ChatConversation() {
               <span className="text-blue-400">Next Interview.</span>
             </h1>
           </div>
-          
+
           <div className="text-sm md:text-lg text-center text-gray-200 leading-relaxed max-w-2xl mx-auto mb-8 px-4 z-10">
             <p className="subtitleText">
               An autonomous interview agent that listens, processes, and speaks.
@@ -788,9 +860,24 @@ function ChatConversation() {
           </div>
 
           <div className="gap-3 flex justify-center items-center mb-5 z-10 techPills">
-             <HoverBorderGradient containerClassName="rounded-full" className="bg-white/10 text-white text-xs px-4 py-1.5">React</HoverBorderGradient>
-             <HoverBorderGradient containerClassName="rounded-full" className="bg-white/10 text-white text-xs px-4 py-1.5">NodeJs</HoverBorderGradient>
-             <HoverBorderGradient containerClassName="rounded-full" className="bg-white/10 text-white text-xs px-4 py-1.5">SLM's</HoverBorderGradient>
+            <HoverBorderGradient
+              containerClassName="rounded-full"
+              className="bg-white/10 text-white text-xs px-4 py-1.5"
+            >
+              React
+            </HoverBorderGradient>
+            <HoverBorderGradient
+              containerClassName="rounded-full"
+              className="bg-white/10 text-white text-xs px-4 py-1.5"
+            >
+              NodeJs
+            </HoverBorderGradient>
+            <HoverBorderGradient
+              containerClassName="rounded-full"
+              className="bg-white/10 text-white text-xs px-4 py-1.5"
+            >
+              SLM's
+            </HoverBorderGradient>
           </div>
 
           <div className="flex items-center justify-center">
@@ -801,9 +888,14 @@ function ChatConversation() {
               onMouseLeave={() => tlRef.current?.reverse()}
               containerClassName="pop-btn"
             >
-              <div ref={containerRef} className="relative h-5 overflow-hidden flex flex-col">
+              <div
+                ref={containerRef}
+                className="relative h-5 overflow-hidden flex flex-col"
+              >
                 <span className="btn-text-1">Get started</span>
-                <span className="absolute top-full left-0 right-0 btn-text-2">Get started</span>
+                <span className="absolute top-full left-0 right-0 btn-text-2">
+                  Get started
+                </span>
               </div>
             </Button>
           </div>
