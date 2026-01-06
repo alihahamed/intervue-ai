@@ -701,11 +701,11 @@ function ChatConversation() {
         <>
           <div className="absolute top-6 left-6 z-50 flex flex-col items-center gap-1 pointer-events-none select-none">
             {/* Logo Image */}
-            <img
+            {/* <img
               src={logo}
               alt="Intervue AI Logo"
               className="w-30 h-auto object-contain"
-            />
+            /> */}
 
             {/* Brand Name Text (Positioned Below) */}
             <span className="text-xs font-bold tracking-[0.2em] uppercase text-white/70">
