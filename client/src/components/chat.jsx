@@ -445,7 +445,7 @@ function ChatConversation() {
       console.log(" Starting Agent Connection...");
       console.log(callEnd);
 
-      // A. Fetch Config
+       // fetch instructions (RAG questions/answer data) and token response for verification for deepgram
       const [instructionsResponse, tokenResponse] = await Promise.all([
         fetch("http://localhost:3021/api/get-voice-context", {
           method: "POST",
@@ -458,7 +458,7 @@ function ChatConversation() {
       const { instructions } = await instructionsResponse.json();
       const { key } = await tokenResponse.json();
 
-      // B. Prepare History
+      // make history context by mapping the messages to type:"History" - we feed this to the deepgram agent for better context
       const historyMessages = messagesRef.current
         .filter((m) => m.sender === "user" || m.sender === "assistant")
         .map((m) => ({
@@ -488,7 +488,7 @@ function ChatConversation() {
         setConnectionStatus("active");
         // console.log("history", historyMessages);
 
-        // 1. Get Mic And Video Stream FIRST to know the Sample Rate
+        //  Get Mic And Video Stream FIRST to know the Sample Rate
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
           video: true,
@@ -506,7 +506,7 @@ function ChatConversation() {
         }
         const sampleRate = audioContextRef.current.sampleRate;
 
-        // 2. Send Settings with LINEAR16 and Dynamic Sample Rate
+        //  Send Settings with LINEAR16 and Dynamic Sample Rate
         const settings = {
           type: "Settings",
           audio: {
@@ -545,7 +545,7 @@ function ChatConversation() {
         };
         socketRef.current.send(JSON.stringify(settings));
 
-        // 3. Setup Audio Processing (Raw PCM)
+        //  Setup Audio Processing (Raw PCM)
         const source = audioContextRef.current.createMediaStreamSource(stream);
         // Buffer size 4096 = ~85ms latency @ 48kHz
         const processor = audioContextRef.current.createScriptProcessor(
@@ -576,7 +576,7 @@ function ChatConversation() {
         };
       };
 
-      // F. Handle Messages
+      //  Handle Messages
       socketRef.current.onmessage = async (message) => {
         // 'message' is the Event Object from the browser, 'message.data' is the actual payload from deepgram (writing so i dont get confused later)
         if (message.data instanceof Blob) {

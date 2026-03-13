@@ -12,8 +12,7 @@ import { TextToSpeech } from "./services/ttsService.js";
 import { VoiceSysInstruction } from "./services/voiceInstructions.js";
 import { json } from "stream/consumers";
 import { createClient } from "@supabase/supabase-js";
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import { TaskType } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { VectorStore } from "@langchain/core/vectorstores";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 
@@ -53,12 +52,14 @@ app.get("/api/get-agent-token", async (req, res) => {
 
 const client = createClient(
   process.env.SUPABASE_PROJECT_URL,
-  process.env.SUPABASE_API_KEY
+  process.env.SUPABASE_API_KEY,
 );
 
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { TaskType } from "@google/generative-ai";
+
 const embeddings = new GoogleGenerativeAIEmbeddings({
-  // the reason we're initialising embeddings again here is because to retreieve the stored vector data from the database by matching it against the vector embedding instead of just plain english
-  modelName: "text-embedding-004",
+  modelName: "gemini-embedding-001",
   taskType: TaskType.RETRIEVAL_QUERY,
   apiKey: process.env.GOOGLE_API_KEY,
 });
@@ -68,9 +69,11 @@ const vectorStore = new SupabaseVectorStore(embeddings, {
   tableName: "documents",
 });
 
+console.log("Vector store initialized");
+
 app.post("/api/get-voice-context", async (req, res) => {
   const survey = req.body.surveyData;
-  console.log("Survey data", survey)
+  console.log("Survey data", survey);
 
   try {
     const results = await vectorStore.similaritySearch(
@@ -80,16 +83,16 @@ app.post("/api/get-voice-context", async (req, res) => {
         // only look in this specific pile
         stack: survey.techStack,
         difficulty: survey.experience,
-      }
-    ); 
-
-    
+      },
+    );
 
     const shuffled = results.sort(() => 0.5 - Math.random());
 
     const selectedDoc = shuffled.slice(0, 5); // selecting 5 random questions
 
-    const finalDocs = selectedDoc.map((doc) => `Topic: ${doc.metadata.topic}: ${doc.pageContent}`).join("\n\n");
+    const finalDocs = selectedDoc
+      .map((doc) => `Topic: ${doc.metadata.topic}: ${doc.pageContent}`)
+      .join("\n\n");
 
     // const pageContent = similiarSearch.map(s => s.pageContent)
     // console.log("page content", pageContent)
